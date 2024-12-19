@@ -6,20 +6,18 @@ import (
 	"fmt"
 	"net"
 	"time"
+
+	"github.com/TLop503/heartbeat0/structs"
 )
 
-type Heartbeat struct {
-	Type      string `json:"type"`
-	Timestamp int64  `json:"timestamp"`
-	Seq       int    `json:"seq"`
-}
-
-func makeHeartbeat(seq int) Heartbeat {
-	return Heartbeat{
-		Type:      "Heartbeat",
+func makeHeartbeat(typ string, seq int) structs.Heartbeat {
+	ret := structs.Heartbeat{
+		Type:      typ,
 		Timestamp: time.Now().Unix(),
 		Seq:       seq,
 	}
+
+	return ret
 }
 
 func main() {
@@ -34,13 +32,12 @@ func main() {
 
 	fmt.Printf("Connected to %s:%s\n", host, port)
 	writer := bufio.NewWriter(conn)
-	reader := bufio.NewReader(conn)
 
-	seq := 0
+	seq := 9
 
 	for {
 		// Create the heartbeat
-		heartbeat := makeHeartbeat(seq)
+		heartbeat := makeHeartbeat("proof_of_life", seq)
 		seq++
 
 		// Convert the heartbeat to JSON
@@ -58,14 +55,6 @@ func main() {
 		}
 		writer.Flush()
 		fmt.Printf("Sent: %s\n", jsonData)
-
-		// Read the response
-		response, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Error reading response:", err)
-			break
-		}
-		fmt.Printf("Response: %s", response)
 
 		time.Sleep(5 * time.Second) // Send a heartbeat every 5 seconds
 	}

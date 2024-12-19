@@ -1,13 +1,23 @@
 Log format:
 ```json
-
 {
-    Host: hostname or ip (WIP)
-    Timestamp: unix ts
-    Type: str (HbSeqErr, HbTimeout, HbGood, etc)
-    Payload : {
-        <this is the unique error struct>
-    }
+   "host":"placeholder_host",
+   "timestamp":1734649442,
+   "type":"{HB : Seq_Err}",
+   "payload":{
+      "exp_seq":0,
+      "recv_seq":9
+   }
+}
+{
+   "host":"placeholder_host",
+   "timestamp":1734649447,
+   "type":"{HB : Good}",
+   "payload":{
+      "type":"proof_of_life",
+      "timestamp":1734649447,
+      "seq":10
+   }
 }
 ```
 

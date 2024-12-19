@@ -45,7 +45,7 @@ func WriteToFile(filePath string, create bool, append bool, payload string) erro
 	defer file.Close()
 
 	// Write the payload to the file
-	_, err = file.WriteString(payload)
+	_, err = file.WriteString(payload + "\n")
 	if err != nil {
 		return fmt.Errorf("error writing to file: %w", err)
 	}

@@ -33,7 +33,7 @@ func main() {
 	fmt.Printf("Connected to %s:%s\n", host, port)
 	writer := bufio.NewWriter(conn)
 
-	seq := 0
+	seq := 9
 
 	for {
 		// Create the heartbeat

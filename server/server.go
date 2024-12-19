@@ -39,6 +39,8 @@ func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
 	seq := 0
+	var last_ts int64
+	last_ts = 0
 
 	for {
 		// Read the incoming JSON message
@@ -54,8 +56,11 @@ func handleConnection(conn net.Conn) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		//hb is now json of the heartbeat
 
+		//if first time, set last ts to expected
+		last_ts = hb.Timestamp
+
+		//check for seq
 		if hb.Seq != seq {
 			//seq error
 			hblog, err := heartbeaterror.GenerateSeqErrorLog("placeholder_host", seq, hb.Seq)
@@ -63,7 +68,7 @@ func handleConnection(conn net.Conn) {
 				log.Fatal(err)
 			}
 			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
-			seq++
+			seq = hb.Seq + 1 //after logging issue reset seq
 		} else {
 			fmt.Printf("%+v\n", hb)
 			seq++

@@ -1,4 +1,4 @@
-package heartbeaterror
+package heartbeatlogs
 
 import (
 	"encoding/json"
@@ -19,7 +19,7 @@ func GenerateSeqErrorLog(host string, exp int, recv int) (string, error) {
 	log := structs.Log{
 		Host:      host,
 		Timestamp: now,
-		Type:      "Heartbeat Sequence Error",
+		Type:      "{HB : Seq_Err}",
 		Payload:   seqErr,
 	}
 

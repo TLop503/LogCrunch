@@ -8,7 +8,7 @@ import (
 	"net"
 
 	"github.com/TLop503/heartbeat0/server/filehandler"
-	"github.com/TLop503/heartbeat0/server/heartbeaterror"
+	"github.com/TLop503/heartbeat0/server/heartbeatlogs"
 	"github.com/TLop503/heartbeat0/structs"
 )
 
@@ -39,8 +39,6 @@ func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
 	seq := 0
-	var last_ts int64
-	last_ts = 0
 
 	for {
 		// Read the incoming JSON message
@@ -57,21 +55,22 @@ func handleConnection(conn net.Conn) {
 			log.Fatal(err)
 		}
 
-		//if first time, set last ts to expected
-		last_ts = hb.Timestamp
-
 		//check for seq
 		if hb.Seq != seq {
 			//seq error
-			hblog, err := heartbeaterror.GenerateSeqErrorLog("placeholder_host", seq, hb.Seq)
+			hblog, err := heartbeatlogs.GenerateSeqErrorLog("placeholder_host", seq, hb.Seq)
 			if err != nil {
 				log.Fatal(err)
 			}
 			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
 			seq = hb.Seq + 1 //after logging issue reset seq
 		} else {
-			fmt.Printf("%+v\n", hb)
 			seq++
+			hblog, err := heartbeatlogs.GenerateLog("placeholder_host", hb)
+			if err != nil {
+				log.Fatal(err)
+			}
+			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
 		}
 
 	}

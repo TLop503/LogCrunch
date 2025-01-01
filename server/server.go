@@ -6,13 +6,22 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
+	"github.com/TLop503/heartbeat0/cryptohandler"
 	"github.com/TLop503/heartbeat0/server/filehandler"
 	"github.com/TLop503/heartbeat0/server/heartbeatlogs"
 	"github.com/TLop503/heartbeat0/structs"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
 	host := "127.0.0.1"
 	port := "5000"
 	listener, err := net.Listen("tcp", host+":"+port)
@@ -39,6 +48,10 @@ func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
 	seq := 0
+	encryptionKey := os.Getenv("AES_KEY")
+	if len(encryptionKey) != 32 {
+		log.Fatalf("Invalid AES key length: %d (must be 32 bytes for AES-256)", len(encryptionKey))
+	}
 
 	for {
 		// Read the incoming JSON message
@@ -48,22 +61,30 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		//decode to json
-		var hb structs.Heartbeat
-		err = json.Unmarshal([]byte(hb_in), &hb)
+		// Decrypt the received log using cryptohandler
+		plaintext, err := cryptohandler.Decrypt(encryptionKey, hb_in)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("Failed to decrypt log: %v", err)
+			continue
 		}
 
-		//check for seq
+		// Decode decrypted JSON into the Heartbeat struct
+		var hb structs.Heartbeat
+		err = json.Unmarshal([]byte(plaintext), &hb)
+		if err != nil {
+			log.Printf("Failed to parse decrypted JSON: %v", err)
+			continue
+		}
+
+		// Check for seq
 		if hb.Seq != seq {
-			//seq error
+			// Seq error
 			hblog, err := heartbeatlogs.GenerateSeqErrorLog("placeholder_host", seq, hb.Seq)
 			if err != nil {
 				log.Fatal(err)
 			}
 			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
-			seq = hb.Seq + 1 //after logging issue reset seq
+			seq = hb.Seq + 1 // After logging issue, reset seq
 		} else {
 			seq++
 			hblog, err := heartbeatlogs.GenerateLog("placeholder_host", hb)
@@ -72,6 +93,5 @@ func handleConnection(conn net.Conn) {
 			}
 			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
 		}
-
 	}
 }

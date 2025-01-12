@@ -7,7 +7,7 @@ import (
 	"github.com/hpcloud/tail"
 )
 
-func main() {
+func authlog() {
 	// Define the path to the log file
 	logFile := "/var/log/auth.log" // Replace with the log file you want to monitor
 
@@ -34,4 +34,8 @@ func main() {
 		// Print the log line
 		fmt.Println(line.Text)
 	}
+}
+
+func main() {
+	go authlog()
 }

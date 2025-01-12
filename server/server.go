@@ -2,36 +2,37 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net"
-	"os"
 
-	"github.com/TLop503/heartbeat0/cryptohandler"
 	"github.com/TLop503/heartbeat0/server/filehandler"
 	"github.com/TLop503/heartbeat0/server/heartbeatlogs"
 	"github.com/TLop503/heartbeat0/structs"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
 
 	host := "127.0.0.1"
 	port := "5000"
-	listener, err := net.Listen("tcp", host+":"+port)
+
+	// Load TLS certificate and key
+	cert, err := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")
 	if err != nil {
-		fmt.Println("Error starting server:", err)
-		return
+		log.Fatalf("Error loading TLS certificate and key: %v", err)
+	}
+
+	config := &tls.Config{Certificates: []tls.Certificate{cert}}
+	listener, err := tls.Listen("tcp", host+":"+port, config)
+	if err != nil {
+		log.Fatalf("Error starting TLS server: %v", err)
 	}
 	defer listener.Close()
 
-	fmt.Printf("Server listening on %s:%s\n", host, port)
+	fmt.Printf("TLS server listening on %s:%s\n", host, port)
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
@@ -48,10 +49,6 @@ func handleConnection(conn net.Conn) {
 	reader := bufio.NewReader(conn)
 
 	seq := 0
-	encryptionKey := os.Getenv("AES_KEY")
-	if len(encryptionKey) != 32 {
-		log.Fatalf("Invalid AES key length: %d (must be 32 bytes for AES-256)", len(encryptionKey))
-	}
 
 	for {
 		// Read the incoming JSON message
@@ -61,18 +58,11 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		// Decrypt the received log using cryptohandler
-		plaintext, err := cryptohandler.Decrypt(encryptionKey, hb_in)
-		if err != nil {
-			log.Printf("Failed to decrypt log: %v", err)
-			continue
-		}
-
-		// Decode decrypted JSON into the Heartbeat struct
+		// Decode JSON into the Heartbeat struct
 		var hb structs.Heartbeat
-		err = json.Unmarshal([]byte(plaintext), &hb)
+		err = json.Unmarshal([]byte(hb_in), &hb)
 		if err != nil {
-			log.Printf("Failed to parse decrypted JSON: %v", err)
+			log.Printf("Failed to parse JSON: %v", err)
 			continue
 		}
 

@@ -77,7 +77,7 @@ func handleConnection(conn net.Conn) {
 			seq = hb.Seq + 1 // After logging issue, reset seq
 		} else {
 			seq++
-			hblog, err := heartbeatlogs.GenerateLog("placeholder_host", hb)
+			hblog, err := heartbeatlogs.GenerateLog(hb)
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/TLop503/heartbeat0/structs"
@@ -13,9 +14,19 @@ import (
 func makeHeartbeat(typ string, seq int) structs.Heartbeat {
 	return structs.Heartbeat{
 		Type:      typ,
+		Host:      getHostName(),
 		Timestamp: time.Now().Unix(),
 		Seq:       seq,
 	}
+}
+
+func getHostName() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		fmt.Printf("Error getting hostname: %v\n", err)
+		return ("UnknownHost")
+	}
+	return hostname
 }
 
 func main() {

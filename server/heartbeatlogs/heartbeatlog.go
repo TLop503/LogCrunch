@@ -7,10 +7,10 @@ import (
 	"github.com/TLop503/heartbeat0/structs"
 )
 
-func GenerateLog(host string, hb structs.Heartbeat) (string, error) {
+func GenerateLog(hb structs.Heartbeat) (string, error) {
 	now := time.Now().Unix()
 	log := structs.Log{
-		Host:      host,
+		Host:      hb.Host,
 		Timestamp: now,
 		Type:      "{HB : Good}",
 		Payload:   hb,

@@ -26,3 +26,7 @@ go.work.sum
 
 # Don't commit logs
 *.log
+
+# Hide our crypto
+*.key
+*.crt

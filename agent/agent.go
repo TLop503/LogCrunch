@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/TLop503/heartbeat0/agent/heartbeat"
+	"github.com/TLop503/heartbeat0/agent/hemoglobin"
 )
 
 func getHostName() string {
@@ -37,6 +38,7 @@ func main() {
 	// spin up a heartbeat goroutine to send proof of life
 	// once every minute
 	go heartbeat.Heartbeat(writer, getHostName())
+	go hemoglobin.ReadLog("/var/log/auth.log", writer)
 
 	// TODO: Add graceful shutdowns
 	select {}

@@ -3,14 +3,11 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 
 	"github.com/TLop503/heartbeat0/server/filehandler"
-	"github.com/TLop503/heartbeat0/server/heartbeatlogs"
-	"github.com/TLop503/heartbeat0/structs"
 )
 
 func main() {
@@ -48,7 +45,7 @@ func handleConnection(conn net.Conn) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
 
-	seq := 0
+	//seq := 0
 
 	for {
 		// Read the incoming JSON message
@@ -58,6 +55,7 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
+		/* for testing
 		// Decode JSON into the Heartbeat struct
 		var hb structs.Heartbeat
 		err = json.Unmarshal([]byte(hb_in), &hb)
@@ -83,5 +81,7 @@ func handleConnection(conn net.Conn) {
 			}
 			filehandler.WriteToFile("./logs/heartbeat.log", true, true, hblog)
 		}
+		*/
+		filehandler.WriteToFile("./logs/firehose.log", true, true, hb_in)
 	}
 }

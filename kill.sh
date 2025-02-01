@@ -1,5 +1,5 @@
 #! /bin/bash
 
-pkill client
+pkill agent
 pkill server
 ps

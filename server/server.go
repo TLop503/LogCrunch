@@ -73,7 +73,7 @@ func handleConnection(conn net.Conn) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
+			filehandler.WriteToFile("./logs/heartbeat.log", true, true, hblog)
 			seq = hb.Seq + 1 // After logging issue, reset seq
 		} else {
 			seq++
@@ -81,7 +81,7 @@ func handleConnection(conn net.Conn) {
 			if err != nil {
 				log.Fatal(err)
 			}
-			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
+			filehandler.WriteToFile("./logs/heartbeat.log", true, true, hblog)
 		}
 	}
 }

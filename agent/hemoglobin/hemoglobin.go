@@ -1,7 +1,6 @@
 package hemoglobin
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 
@@ -12,12 +11,15 @@ import (
 Hemoglobin is a <routine> containing <data> that facilitates the transportation of <logs> in <agents>.
 */
 
-func ReadLog(path string, writer *bufio.Writer) {
+func ReadLog(logChan chan<- string, path string) {
+	var seekOffset int64 = 0
+
 	tailConfig := tail.Config{
-		ReOpen:    true,                  // Handle log rotation
-		Follow:    true,                  // Continuously read new lines
-		MustExist: false,                 // Don't error if the file doesn't exist initially
-		Logger:    tail.DiscardingLogger, // Disable internal logging
+		ReOpen:    true,                                          // Handle log rotation
+		Follow:    true,                                          // Continuously read new lines
+		MustExist: false,                                         // Don't error if the file doesn't exist initially
+		Location:  &tail.SeekInfo{Offset: seekOffset, Whence: 0}, // Start from the end (TODO: Why doesn't this work)
+		Logger:    tail.DiscardingLogger,                         // Disable internal logging
 	}
 
 	// Open the log file with the specified configuration
@@ -34,15 +36,6 @@ func ReadLog(path string, writer *bufio.Writer) {
 		}
 		// write over wire
 		//TODO! add parsing
-		_, err = writer.WriteString(line.Text)
-		if err != nil {
-			fmt.Println("Error sending log:", err)
-			break
-		}
-		err = writer.Flush()
-		if err != nil {
-			fmt.Println("Error flushing data:", err)
-			break
-		}
+		logChan <- line.Text
 	}
 }

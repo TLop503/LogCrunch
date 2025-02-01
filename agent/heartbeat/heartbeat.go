@@ -1,7 +1,6 @@
 package heartbeat
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -20,7 +19,7 @@ func makeHeartbeat(typ string, seq int, hostname string) structs.Heartbeat {
 }
 
 // create hb via makeHeartbeat, then write to writer (which is sent over wire).
-func Heartbeat(writer *bufio.Writer, hostname string) {
+func Heartbeat(logChan chan<- string, hostname string) {
 	seq := 0
 	for { //forever
 
@@ -34,17 +33,8 @@ func Heartbeat(writer *bufio.Writer, hostname string) {
 			break
 		}
 
-		// Send the JSON data with a newline
-		_, err = writer.WriteString(string(jsonData) + "\n")
-		if err != nil {
-			fmt.Println("Error sending heartbeat:", err)
-			break
-		}
-		err = writer.Flush()
-		if err != nil {
-			fmt.Println("Error flushing data:", err)
-			break
-		}
+		// Send the JSON data to the writer via chan
+		logChan <- string(jsonData)
 
 		time.Sleep(60 * time.Second) // Send a heartbeat every minute. TODO: make this easy to configure.
 	}

@@ -19,6 +19,18 @@ func getHostName() string {
 	return hostname
 }
 
+// writerRoutine handles all writes to the server
+func writerRoutine(writer *bufio.Writer, dataChan <-chan string) {
+	for data := range dataChan {
+		_, err := writer.WriteString(data + "\n")
+		if err != nil {
+			fmt.Println("Error writing data:", err)
+			return
+		}
+		writer.Flush()
+	}
+}
+
 func main() {
 	host := "127.0.0.1"
 	port := "5000"
@@ -35,10 +47,16 @@ func main() {
 	writer := bufio.NewWriter(conn)
 	fmt.Printf("Connected to %s:%s via TLS\n", host, port)
 
+	// create channel for thread-safe writes
+	logChan := make(chan string)
+
+	//start the writer
+	go writerRoutine(writer, logChan)
+
 	// spin up a heartbeat goroutine to send proof of life
 	// once every minute
-	go heartbeat.Heartbeat(writer, getHostName())
-	go hemoglobin.ReadLog("/var/log/auth.log", writer)
+	go heartbeat.Heartbeat(logChan, getHostName())
+	go hemoglobin.ReadLog(logChan, "/var/log/auth.log")
 
 	// TODO: Add graceful shutdowns
 	select {}

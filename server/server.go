@@ -3,14 +3,11 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 
 	"github.com/TLop503/heartbeat0/server/filehandler"
-	"github.com/TLop503/heartbeat0/server/heartbeatlogs"
-	"github.com/TLop503/heartbeat0/structs"
 )
 
 func main() {
@@ -48,40 +45,13 @@ func handleConnection(conn net.Conn) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
 
-	seq := 0
-
 	for {
-		// Read the incoming JSON message
 		hb_in, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("Connection closed:", err)
 			return
 		}
 
-		// Decode JSON into the Heartbeat struct
-		var hb structs.Heartbeat
-		err = json.Unmarshal([]byte(hb_in), &hb)
-		if err != nil {
-			log.Printf("Failed to parse JSON: %v", err)
-			continue
-		}
-
-		// Check for seq
-		if hb.Seq != seq {
-			// Seq error
-			hblog, err := heartbeatlogs.GenerateSeqErrorLog("placeholder_host", seq, hb.Seq)
-			if err != nil {
-				log.Fatal(err)
-			}
-			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
-			seq = hb.Seq + 1 // After logging issue, reset seq
-		} else {
-			seq++
-			hblog, err := heartbeatlogs.GenerateLog("placeholder_host", hb)
-			if err != nil {
-				log.Fatal(err)
-			}
-			filehandler.WriteToFile("heartbeat.log", true, true, hblog)
-		}
+		filehandler.WriteToFile("./logs/firehose.log", true, true, hb_in)
 	}
 }

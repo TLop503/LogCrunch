@@ -3,6 +3,7 @@ package structs
 type Heartbeat struct {
 	Type      string `json:"type"`
 	Timestamp int64  `json:"timestamp"`
+	Host      string `json:"host"`
 	Seq       int    `json:"seq"`
 }
 

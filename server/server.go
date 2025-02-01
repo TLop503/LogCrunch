@@ -45,43 +45,13 @@ func handleConnection(conn net.Conn) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
 
-	//seq := 0
-
 	for {
-		// Read the incoming JSON message
 		hb_in, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("Connection closed:", err)
 			return
 		}
 
-		/* for testing
-		// Decode JSON into the Heartbeat struct
-		var hb structs.Heartbeat
-		err = json.Unmarshal([]byte(hb_in), &hb)
-		if err != nil {
-			log.Printf("Failed to parse JSON: %v", err)
-			continue
-		}
-
-		// Check for seq
-		if hb.Seq != seq {
-			// Seq error
-			hblog, err := heartbeatlogs.GenerateSeqErrorLog("placeholder_host", seq, hb.Seq)
-			if err != nil {
-				log.Fatal(err)
-			}
-			filehandler.WriteToFile("./logs/heartbeat.log", true, true, hblog)
-			seq = hb.Seq + 1 // After logging issue, reset seq
-		} else {
-			seq++
-			hblog, err := heartbeatlogs.GenerateLog(hb)
-			if err != nil {
-				log.Fatal(err)
-			}
-			filehandler.WriteToFile("./logs/heartbeat.log", true, true, hblog)
-		}
-		*/
 		filehandler.WriteToFile("./logs/firehose.log", true, true, hb_in)
 	}
 }

@@ -21,7 +21,7 @@ func main() {
 	port := os.Args[2]
 
 	// Load TLS certificate and key
-	cert, err := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")
+	cert, err := tls.LoadX509KeyPair("./certs/server.crt", "./certs/server.key")
 	if err != nil {
 		log.Fatalf("Error loading TLS certificate and key: %v", err)
 	}

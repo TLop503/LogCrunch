@@ -74,13 +74,24 @@ func main() {
 	// create channel for thread-safe writes
 	logChan := make(chan string)
 
-	//start the writer
+	// start the writer
 	go writerRoutine(writer, logChan)
 
 	// spin up a heartbeat goroutine to send proof of life
 	// once every minute
 	go heartbeat.Heartbeat(logChan, getHostName())
-	go hemoglobin.ReadLog(logChan, "/var/log/auth.log")
+
+	// Read log file paths from targets.cfg
+	targetPaths, err := readTargets("./targets.cfg")
+	if err != nil {
+		fmt.Println("Error reading targets file:", err)
+		return
+	}
+
+	// Start a hemoglobin instance for each target path
+	for _, path := range targetPaths {
+		go hemoglobin.ReadLog(logChan, path)
+	}
 
 	// TODO: Add graceful shutdowns
 	select {}

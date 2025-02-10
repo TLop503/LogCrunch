@@ -1,7 +1,0 @@
-Figure out basic interface to show active connections, and interacting with them. manually refresh until smth nicer works? Allow for renaming, chaning time. Work on this in a different repo?
-
-- documentation
-- file creation events
-- execution events
-- /var/log/*
-- parsing

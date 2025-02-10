@@ -30,3 +30,10 @@ go.work.sum
 # Hide our crypto
 *.key
 *.crt
+
+# don't commit objects
+bins/*
+staging/*
+
+# or archives
+*.tar.gz

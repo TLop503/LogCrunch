@@ -6,14 +6,19 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"github.com/TLop503/heartbeat0/server/filehandler"
 )
 
 func main() {
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: program <host> <port>")
+		return
+	}
 
-	host := "127.0.0.1"
-	port := "5000"
+	host := os.Args[1]
+	port := os.Args[2]
 
 	// Load TLS certificate and key
 	cert, err := tls.LoadX509KeyPair("./server/server.crt", "./server/server.key")

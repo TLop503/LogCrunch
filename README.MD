@@ -1,5 +1,5 @@
-# Heartbeat0
-*A WIP SIEM for CDC Competitions. Name subject to change*
+# Heartbeat0 is now LogCrunch
+*A WIP SIEM for CDC Competitions. Name subject to change again :)*
 
 This SIEM (though currently only a log aggregator) works by `tail -f`'ing a (easily editable!) list of log files and sending them over the wire to a single stash. Because of Go's channels and routines, writing is both thread safe and elegant. This project aims to undercut existing SIEMs in computational strength needed to run on even the weakest of endpoints.
 

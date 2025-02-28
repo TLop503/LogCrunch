@@ -12,16 +12,24 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: program <host> <port>")
+
+	fmt.Println("\n __    _____  ___     ___  ____  __  __  _  _  ___  _   _ ")
+	fmt.Println("(  )  (  _  )/ __)   / __)(  _ \\(  )(  )( \\( )/ __)( )_( )")
+	fmt.Println(" )(__  )(_)(( (_-.  ( (__  )   / )(__)(  )  (( (__  ) _ ( ")
+	fmt.Println("(____)(_____)\\___/   \\___)(_)\\_)(______)(_)\\_)\\___)(_) (_)")
+
+	if len(os.Args) < 4 {
+		fmt.Println("Usage: <host> <port> <cert path> <key path>")
 		return
 	}
 
 	host := os.Args[1]
 	port := os.Args[2]
+	crt := os.Args[3]
+	key := os.Args[4]
 
 	// Load TLS certificate and key
-	cert, err := tls.LoadX509KeyPair("./certs/server.crt", "./certs/server.key")
+	cert, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
 		log.Fatalf("Error loading TLS certificate and key: %v", err)
 	}

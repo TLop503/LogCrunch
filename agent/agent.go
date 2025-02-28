@@ -12,16 +12,17 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: program <host> <port>")
+	if len(os.Args) < 4 {
+		fmt.Println("Usage: program <host> <port> <verify certs y/n")
 		return
 	}
 
 	host := os.Args[1]
 	port := os.Args[2]
+	ISV := os.Args[3] == "y"
 
 	// Configure TLS
-	config := &tls.Config{InsecureSkipVerify: true} // Set to `false` in production with valid certs
+	config := &tls.Config{InsecureSkipVerify: ISV} // Set to `false` in production with valid certs
 	// Connect to server
 	conn, err := tls.Dial("tcp", host+":"+port, config)
 	if err != nil {

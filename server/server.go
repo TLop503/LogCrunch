@@ -18,7 +18,7 @@ func main() {
 	fmt.Println(" )(__  )(_)(( (_-.  ( (__  )   / )(__)(  )  (( (__  ) _ ( ")
 	fmt.Println("(____)(_____)\\___/   \\___)(_)\\_)(______)(_)\\_)\\___)(_) (_)")
 
-	if len(os.Args) < 4 {
+	if len(os.Args) < 5 {
 		fmt.Println("Usage: <host> <port> <cert path> <key path>")
 		return
 	}

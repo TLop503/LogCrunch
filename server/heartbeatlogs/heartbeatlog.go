@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/TLop503/heartbeat0/structs"
+	"github.com/TLop503/LogCrunch/structs"
 )
 
 func GenerateLog(hb structs.Heartbeat) (string, error) {

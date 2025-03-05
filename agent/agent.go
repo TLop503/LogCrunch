@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TLop503/heartbeat0/agent/heartbeat"
-	"github.com/TLop503/heartbeat0/agent/hemoglobin"
-	"github.com/TLop503/heartbeat0/agent/utils"
+	"github.com/TLop503/LogCrunch/agent/heartbeat"
+	"github.com/TLop503/LogCrunch/agent/hemoglobin"
+	"github.com/TLop503/LogCrunch/agent/utils"
 )
 
 func main() {

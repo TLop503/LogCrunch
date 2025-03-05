@@ -8,7 +8,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/TLop503/heartbeat0/server/filehandler"
+	"github.com/TLop503/LogCrunch/server/filehandler"
 )
 
 func main() {
@@ -33,7 +33,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading TLS certificate and key: %v", err)
 	}
-
 	config := &tls.Config{Certificates: []tls.Certificate{cert}}
 	listener, err := tls.Listen("tcp", host+":"+port, config)
 	if err != nil {
@@ -43,6 +42,7 @@ func main() {
 
 	fmt.Printf("TLS server listening on %s:%s\n", host, port)
 
+	// accept incoming transmissions indefinitely until we are killed
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

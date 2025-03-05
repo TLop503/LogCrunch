@@ -19,7 +19,7 @@ This is a WIP project for my honors undergrad thesis. Issues, etc are welcome bu
 
 
 # How to run
-There are 2 ways to run this project. You can either download the latest [release](https://github.com/TLop503/heartbeat0/releases), or clone the project. 
+There are 2 ways to run this project. You can either download the latest [release](https://github.com/TLop503/LogCrunch/releases), or clone the project. 
 
 ## From Release
 1. Download the tarball and extract it

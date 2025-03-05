@@ -1,4 +1,4 @@
-module github.com/TLop503/heartbeat0
+module github.com/TLop503/LogCrunch
 
 go 1.23.4
 

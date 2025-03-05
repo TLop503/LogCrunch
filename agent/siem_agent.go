@@ -6,22 +6,26 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/TLop503/heartbeat0/agent/heartbeat"
-	"github.com/TLop503/heartbeat0/agent/hemoglobin"
-	"github.com/TLop503/heartbeat0/agent/utils"
+	"github.com/TLop503/LogCrunch/agent/heartbeat"
+	"github.com/TLop503/LogCrunch/agent/hemoglobin"
+	"github.com/TLop503/LogCrunch/agent/utils"
 )
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: program <host> <port>")
+	if len(os.Args) < 5 {
+		fmt.Println("Usage: program <host> <port> <congfig file> <verify certs y/n")
 		return
 	}
 
 	host := os.Args[1]
 	port := os.Args[2]
+	cfg := os.Args[3]
+	fmt.Println(os.Args[4])
+	ISV := (os.Args[4] == "n")
+	fmt.Println(ISV)
 
 	// Configure TLS
-	config := &tls.Config{InsecureSkipVerify: true} // Set to `false` in production with valid certs
+	config := &tls.Config{InsecureSkipVerify: ISV} // Set to `false` in production with valid certs
 	// Connect to server
 	conn, err := tls.Dial("tcp", host+":"+port, config)
 	if err != nil {
@@ -43,7 +47,7 @@ func main() {
 	go heartbeat.Heartbeat(logChan, utils.GetHostName())
 
 	// Read log file paths from targets.cfg
-	targetPaths, err := utils.ReadTargets("./targets.cfg")
+	targetPaths, err := utils.ReadTargets(cfg)
 	if err != nil {
 		fmt.Println("Error reading targets file:", err)
 		return

@@ -1,5 +1,6 @@
 #! /bin/bash
 
-pkill agent
-pkill server
+pkill siem_agent
+pkill siem_intake_server
+pkill siem_intake_ser
 ps

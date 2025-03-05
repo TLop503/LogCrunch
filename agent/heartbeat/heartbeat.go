@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TLop503/heartbeat0/structs"
+	"github.com/TLop503/LogCrunch/structs"
 )
 
 // format the actual log payload into a struct

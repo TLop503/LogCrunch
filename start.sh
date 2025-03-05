@@ -3,6 +3,9 @@
 HOST="127.0.0.1"
 PORT="5000"
 
-go run ./server/server.go $HOST $PORT &
+# clean up from last time
+./kill.sh
+
+go run ./server/siem_intake_server.go $HOST $PORT ./certs/server.crt ./certs/server.key &
 sleep 2
-go run ./agent/agent.go $HOST $PORT &
+go run ./agent/siem_agent.go $HOST $PORT ./targets.cfg n &

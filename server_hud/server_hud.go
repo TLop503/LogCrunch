@@ -1,5 +1,11 @@
 package main
 
+/*
+ * TODO:
+ * 1. Find a way to save aliases. Have this be a flag, so that the
+ * network map getting saved to disk is opt-in!
+ */
+
 import (
 	"bufio"
 	"fmt"

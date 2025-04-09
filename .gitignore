@@ -37,3 +37,9 @@ staging/*
 
 # or archives
 *.tar.gz
+
+# ignore testing ip list for hud
+ips.test
+
+# ide stuff
+.idea/*

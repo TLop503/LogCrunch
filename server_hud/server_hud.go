@@ -9,6 +9,8 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
+	"net"
 	"os"
 	"strings"
 
@@ -17,6 +19,8 @@ import (
 )
 
 type inputMode int
+
+const SockAddr = "/tmp/hud.sock"
 
 const (
 	normalMode inputMode = iota
@@ -236,19 +240,19 @@ func watchFile(filePath string, updates chan<- []string) {
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: server_hud <file to watch>")
-		os.Exit(1)
+	// clean up socket stuff
+	if err := os.RemoveAll(SockAddr); err != nil {
+		log.Fatal(err)
 	}
 
 	ipFile := os.Args[1]
 
-	// Read the initial file contents
-	lines, err := readFile(ipFile)
+	// Read the initial socket contents
+	l, err := net.Listen("unix", SockAddr)
 	if err != nil {
-		fmt.Println("Error reading file:", err)
-		os.Exit(1)
+		log.Fatal("listen error: ", err)
 	}
+	defer l.Close()
 
 	// Create a channel for file updates
 	updates := make(chan []string)

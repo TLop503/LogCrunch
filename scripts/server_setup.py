@@ -60,11 +60,19 @@ def generate_certs():
     # Create directory if it doesn't exist
     os.makedirs(crypto_dir, exist_ok=True)
     
-    # Generate crt/key
-    subprocess.run([
-        "openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", "server.key",
-        "-out", "server.crt", "-days", "365", "-nodes", "-subj", "/CN=localhost"
-    ], check=True)
+    # Change to the crypto directory to ensure files are created there
+    original_cwd = os.getcwd()
+    os.chdir(crypto_dir)
+    
+    try:
+        # Generate crt/key
+        subprocess.run([
+            "openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", "server.key",
+            "-out", "server.crt", "-days", "365", "-nodes", "-subj", "/CN=localhost"
+        ], check=True)
+    finally:
+        # Always return to original directory
+        os.chdir(original_cwd)
     
     print(f"Certificates generated successfully:")
     print(f"  Certificate: {cert_path}")
@@ -72,32 +80,9 @@ def generate_certs():
     
     return cert_path, key_path
 
-def linux(cert_path, key_path, port):
-
-    # check if we are in repo; if not, clone!
-    current_dir = Path(__file__).resolve().parent
-    if current_dir != "LogCrunch":
-        clone_repo()
-
-    # check if golang installed
-    go_path = subprocess.run(["which", "go"], capture_output=True).stdout
-    if go_path != b'':
-        go_ver = subprocess.run(["go", "version"], capture_output=True).stdout
-        print(f"LogCrunch is built and tested on Go {GO_VER}")
-        print(f"You currently have {go_ver}")
-        i = input("Would you like to clean-install this version of go? y/n: ")
-        if i == "y":
-            install_go()
-    else:
-        print("Installing latest Go...")
-        install_go()
-        go_path = subprocess.run(["which", "go"], capture_output=True).stdout
-        if go_path == b'':
-            print("Error! Go installation failed. Aborting...")
-            exit()
-    
+def compile_server():
+    """Compile the LogCrunch SIEM server"""
     print("Compiling SIEM Server")
-    print(f"Server will be configured to run on port {port}")
     
     # Expand the home directory path properly
     server_output_path = os.path.expanduser("~/logcrunch_server")
@@ -175,6 +160,34 @@ def linux(cert_path, key_path, port):
     
     print("Server built successfully!")
     subprocess.run(["chmod", "+x", server_output_path], check=True)
+    
+    return server_output_path
+
+def linux(cert_path, key_path, port):
+
+    # check if we are in repo; if not, clone!
+    current_dir = Path(__file__).resolve().parent
+    if current_dir != "LogCrunch":
+        clone_repo()
+
+    # check if golang installed
+    go_path = subprocess.run(["which", "go"], capture_output=True).stdout
+    if go_path != b'':
+        go_ver = subprocess.run(["go", "version"], capture_output=True).stdout
+        print(f"LogCrunch is built and tested on Go {GO_VER}")
+        print(f"You currently have {go_ver}")
+        i = input("Would you like to clean-install this version of go? y/n: ")
+        if i == "y":
+            install_go()
+    else:
+        print("Installing latest Go...")
+        install_go()
+        go_path = subprocess.run(["which", "go"], capture_output=True).stdout
+        if go_path == b'':
+            print("Error! Go installation failed. Aborting...")
+            exit()
+    
+    compile_server()
     
     cert_path, key_path = handle_certs(cert_path, key_path)
 

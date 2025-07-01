@@ -37,6 +37,3 @@ staging/*
 
 # or archives
 *.tar.gz
-
-# WIP
-Dockerfile

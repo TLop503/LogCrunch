@@ -15,10 +15,17 @@ def systemd():
 
 def install_go():
     # install golang tarball
-    subprocess.run(["curl", "-O", "https://go.dev/dl/go1.23.4.linux-amd64.tar.gz"])
-    subprocess.run(["rm", "-rf", "/usr/local/go"])
-    subprocess.run(["tar", "-C", "/usr/local", "xzf", "go1.23.4.linux-amd64.tar.gz"])
-    subprocess.run("echo", "PATH=$PATH:/usr/local/go/bin", ">>", "$HOME/.profile")
+    subprocess.run(["curl", "-L", "-O", "https://go.dev/dl/go1.23.4.linux-amd64.tar.gz"], check=True)
+    subprocess.run(["rm", "-rf", "/usr/local/go"], check=True)
+    subprocess.run(["tar", "-C", "/usr/local", "-xzf", "go1.23.4.linux-amd64.tar.gz"], check=True)
+    
+    with open("/etc/profile", "a") as f:
+        f.write("\n# Add Go to PATH\nexport PATH=$PATH:/usr/local/go/bin\n")
+    
+    # Update current environment for this script
+    current_path = os.environ.get('PATH', '')
+    if '/usr/local/go/bin' not in current_path:
+        os.environ['PATH'] = f"{current_path}:/usr/local/go/bin"
 
 def clone_repo():
     subprocess.run(["git", "clone", "https://github.com/TLop503/LogCrunch.git"])
@@ -85,18 +92,89 @@ def linux(cert_path, key_path, port):
         print("Installing latest Go...")
         install_go()
         go_path = subprocess.run(["which", "go"], capture_output=True).stdout
-        if go_path != b'':
+        if go_path == b'':
             print("Error! Go installation failed. Aborting...")
             exit()
     
     print("Compiling SIEM Server")
     print(f"Server will be configured to run on port {port}")
-    compilation_output = subprocess.run(["go", "build", "-o", "~/logcrunch_server", "./server/siem_intake_server.go"], capture_output=True).stdout
-    if not os.path.isfile("~/logcrunch_server"):
-        print("Erorr, compilation failed with output:")
-        print(compilation_output)
-    print("Server built!")
-    subprocess.run("chmod", "+x", "~/logcrunch_server")
+    
+    # Expand the home directory path properly
+    server_output_path = os.path.expanduser("~/logcrunch_server")
+    
+    # Change to the LogCrunch directory if we're not already there
+    logcrunch_dir = None
+    if os.path.exists("./go.mod"):
+        logcrunch_dir = "."
+    elif os.path.exists("../go.mod"):
+        logcrunch_dir = ".."
+    elif os.path.exists("./LogCrunch/go.mod"):
+        logcrunch_dir = "./LogCrunch"
+    else:
+        print("Error: Cannot find LogCrunch go.mod file")
+        print("Current directory:", os.getcwd())
+        print("Looking for go.mod in current directory and parent directories")
+        exit(1)
+    
+    # Change to the module directory
+    original_cwd = os.getcwd()
+    os.chdir(logcrunch_dir)
+    
+    try:
+        print(f"Changed to module directory: {os.getcwd()}")
+        
+        # Run go mod tidy first to ensure dependencies are resolved
+        print("Running go mod tidy...")
+        tidy_result = subprocess.run(["go", "mod", "tidy"], capture_output=True, text=True)
+        if tidy_result.returncode != 0:
+            print("Warning: go mod tidy failed")
+            print("STDERR:", tidy_result.stderr)
+        
+        # Build the server using module-aware compilation
+        print("Building server...")
+        compilation_result = subprocess.run([
+            "go", "build", "-o", server_output_path, "./server"
+        ], capture_output=True, text=True)
+        
+        # Check if compilation was successful
+        if compilation_result.returncode != 0:
+            print("Error: Go compilation failed!")
+            print("Return code:", compilation_result.returncode)
+            print("STDOUT:", compilation_result.stdout)
+            print("STDERR:", compilation_result.stderr)
+            print("Current working directory:", os.getcwd())
+            print("Contents of current directory:")
+            try:
+                for item in os.listdir("."):
+                    print(f"  {item}")
+            except Exception as e:
+                print(f"  Could not list directory: {e}")
+            
+            # Check if the server directory exists
+            if os.path.exists("./server"):
+                print("Server directory exists, contents:")
+                try:
+                    for item in os.listdir("./server"):
+                        print(f"  {item}")
+                except Exception as e:
+                    print(f"  Could not list server directory: {e}")
+            else:
+                print("Error: ./server directory does not exist!")
+            
+            exit(1)
+    
+    finally:
+        # Always return to original directory
+        os.chdir(original_cwd)
+    
+    # Check if the output file was created
+    if not os.path.isfile(server_output_path):
+        print(f"Error: Expected output file not found at {server_output_path}")
+        print("Compilation appeared to succeed but no output file was created")
+        exit(1)
+    
+    print("Server built successfully!")
+    subprocess.run(["chmod", "+x", server_output_path], check=True)
     
     cert_path, key_path = handle_certs(cert_path, key_path)
 

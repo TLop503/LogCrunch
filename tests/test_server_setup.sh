@@ -18,7 +18,7 @@ docker run --rm -i "$IMAGE_NAME" bash -c "
     echo '[*] Starting server setup...'
     start_time=\$(date +%s)
     
-    echo '' | python3 /root/server_setup.py 5000 &&
+    echo '' | python3 /root/server_setup.py localhost 5000 &&
     
     end_time=\$(date +%s)
     duration=\$((end_time - start_time))

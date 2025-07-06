@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"github.com/TLop503/LogCrunch/server/filehandler"
+	"github.com/TLop503/LogCrunch/structs"
 	"log"
 	"net"
 	"os"
-
-	"github.com/TLop503/LogCrunch/server/filehandler"
+	"time"
 )
 
 func main() {
@@ -43,20 +44,26 @@ func main() {
 	fmt.Printf("TLS server listening on %s:%s\n", host, port)
 
 	// accept incoming transmissions indefinitely until we are killed
+	connList := structs.NewConnList()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection:", err)
 			continue
 		}
-		fmt.Println("Client connected:", conn.RemoteAddr())
-		go handleConnection(conn)
+		connList.AddToConnList(conn)
+		go handleConnection(conn, connList)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+// takes an active connection and a pointer to the list of connections
+// processes incoming logs (currently just writes to file)
+// and updates the connection in the list when it is closed.
+func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
+
+	addr := conn.RemoteAddr().String()
 
 	for {
 		hb_in, err := reader.ReadString('\n')
@@ -65,6 +72,19 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		filehandler.WriteToFile("./logs/firehose.log", true, true, hb_in)
+		connList.RLock()
+		trackedConn, ok := connList.Connections[addr]
+		connList.RUnlock()
+
+		if ok {
+			trackedConn.Lock()
+			trackedConn.LastSeen = time.Now()
+			trackedConn.Unlock()
+		}
+
+		err = filehandler.WriteToFile("./logs/firehose.log", true, true, hb_in)
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+		}
 	}
 }

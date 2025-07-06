@@ -1,4 +1,4 @@
-package heartbeatlogs
+package heartbeatlogs_unused
 
 import (
 	"encoding/json"

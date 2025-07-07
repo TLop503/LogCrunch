@@ -63,7 +63,12 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
 
-	addr := conn.RemoteAddr().String()
+	host, _, err := net.SplitHostPort(conn.RemoteAddr().String())
+
+	if err != nil {
+		fmt.Println("Invalid remote address:", conn.RemoteAddr())
+		return
+	}
 
 	for {
 		hb_in, err := reader.ReadString('\n')
@@ -73,7 +78,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 		}
 
 		connList.RLock()
-		trackedConn, ok := connList.Connections[addr]
+		trackedConn, ok := connList.Connections[host]
 		connList.RUnlock()
 
 		if ok {

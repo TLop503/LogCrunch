@@ -2,6 +2,7 @@ package structs
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"sync"
 	"time"
@@ -26,17 +27,33 @@ func NewConnList() *ConnectionList {
 	}
 }
 
+// Add new host to list, w/ smart deduplication.
+// duplicate connections are reconciled into a single entry in the connection list
 func (ct *ConnectionList) AddToConnList(conn net.Conn) {
+	host, _, err := net.SplitHostPort(conn.RemoteAddr().String())
+	if err != nil {
+		log.Println("Invalid remote address:", conn.RemoteAddr())
+		return
+	}
+
 	ct.Lock()
 	defer ct.Unlock()
 
-	addr := conn.RemoteAddr().String()
-	ct.Connections[addr] = &Connection{
-		RemoteAddr: conn.RemoteAddr().String(),
-		FirstSeen:  time.Now(),
-		LastSeen:   time.Now(),
+	if existing, exists := ct.Connections[host]; exists {
+		// Update metadata if already exists
+		existing.Lock()
+		existing.LastSeen = time.Now()
+		existing.Unlock()
+	} else {
+		// Create a new entry
+		ct.Connections[host] = &Connection{
+			RemoteAddr: host,
+			FirstSeen:  time.Now(),
+			LastSeen:   time.Now(),
+		}
 	}
-	ct.print() // for testing, view all connections each time a new one arrives.
+
+	ct.print()
 }
 
 func (ct *ConnectionList) print() {

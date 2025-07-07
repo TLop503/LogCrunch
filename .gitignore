@@ -11,12 +11,6 @@
 # Test binary, built with `go test -c`
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
 # Go workspace file
 go.work
 go.work.sum
@@ -30,10 +24,12 @@ go.work.sum
 # Hide our crypto
 *.key
 *.crt
+crypto/*
 
 # don't commit objects
 bins/*
 staging/*
+release/*
 
 # or archives
 *.tar.gz

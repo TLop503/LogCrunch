@@ -40,16 +40,16 @@ func main() {
 	}
 	defer listener.Close()
 
-	fmt.Printf("TLS server listening on %s:%s\n", host, port)
+	log.Printf("TLS server listening on %s:%s\n", host, port)
 
 	// accept incoming transmissions indefinitely until we are killed
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("Error accepting connection:", err)
+			fmt.Errorf("Error accepting connection:", err)
 			continue
 		}
-		fmt.Println("Client connected:", conn.RemoteAddr())
+		log.Println("Client connected:", conn.RemoteAddr())
 		go handleConnection(conn)
 	}
 }
@@ -61,10 +61,10 @@ func handleConnection(conn net.Conn) {
 	for {
 		hb_in, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Connection closed:", err)
+			log.Println("Connection closed:", err)
 			return
 		}
 
-		filehandler.WriteToFile("./logs/firehose.log", true, true, hb_in)
+		filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, true, hb_in)
 	}
 }

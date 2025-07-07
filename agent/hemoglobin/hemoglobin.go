@@ -1,7 +1,6 @@
 package hemoglobin
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/hpcloud/tail"
@@ -31,7 +30,7 @@ func ReadLog(logChan chan<- string, path string) {
 	// Process lines as they are added to the log file
 	for line := range t.Lines {
 		if line.Err != nil {
-			fmt.Printf("Error reading line: %v\n", line.Err)
+			log.Printf("Error reading line from file %v: %v\n", path, line.Err)
 			continue
 		}
 		// write over wire

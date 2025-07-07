@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/TLop503/LogCrunch/agent/heartbeat"
@@ -29,12 +30,12 @@ func main() {
 	// Connect to server
 	conn, err := tls.Dial("tcp", host+":"+port, config)
 	if err != nil {
-		fmt.Println("Error connecting to server:", err)
+		log.Println("Error connecting to server:", err)
 		return
 	}
 	defer conn.Close()
 	writer := bufio.NewWriter(conn)
-	fmt.Printf("Connected to %s:%s via TLS\n", host, port)
+	log.Printf("Connected to %s:%s via TLS\n", host, port)
 
 	// create channel for thread-safe writes
 	logChan := make(chan string)
@@ -49,7 +50,7 @@ func main() {
 	// Read log file paths from targets.cfg
 	targetPaths, err := utils.ReadTargets(cfg)
 	if err != nil {
-		fmt.Println("Error reading targets file:", err)
+		fmt.Errorf("Error reading targets file:", err)
 		return
 	}
 

@@ -15,6 +15,10 @@ func WriteToFile(filePath string, create bool, append bool, payload string) erro
 
 	if os.IsNotExist(err) {
 		if create {
+			// Create intermediate directories
+			if err = os.MkdirAll(filePath, os.ModePerm); err != nil {
+				return fmt.Errorf("mkdir err: %v", err)
+			}
 			// Create the file if it doesn't exist and create flag is true
 			file, err = os.Create(filePath)
 			if err != nil {

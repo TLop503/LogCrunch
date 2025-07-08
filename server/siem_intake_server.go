@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/TLop503/LogCrunch/server/filehandler"
+	"github.com/TLop503/LogCrunch/server/self_logging"
 	"github.com/TLop503/LogCrunch/structs"
 	"log"
 	"net"
@@ -48,7 +49,9 @@ func main() {
 		"/var/log/LogCrunch/old_firehose.log",
 		true,
 	)
-	filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, "LOGCRUNCH STARTED AT time")
+
+	startLog := self_logging.CreateStartLog(host, port)
+	filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
 
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()

@@ -42,6 +42,13 @@ func main() {
 	defer listener.Close()
 
 	fmt.Printf("TLS server listening on %s:%s\n", host, port)
+	// log starting point
+	// TODO: finalize starting message
+	filehandler.RotateFile("/var/log/LogCrunch/firehose.log",
+		"/var/log/LogCrunch/old_firehose.log",
+		true,
+	)
+	filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, "LOGCRUNCH STARTED AT time")
 
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
@@ -77,19 +84,20 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 			return
 		}
 
+		// Read connection from list
+		// TODO: is mutex required here? could the connlist get away without one, since each conn has one?
 		connList.RLock()
 		trackedConn, ok := connList.Connections[host]
 		connList.RUnlock()
-
 		if ok {
 			trackedConn.Lock()
-			trackedConn.LastSeen = time.Now()
+			trackedConn.LastSeen = time.Now() // this should update after each received log entry.
 			trackedConn.Unlock()
 		}
 
-		err = filehandler.WriteToFile("./logs/firehose.log", true, true, hb_in)
+		err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, true, hb_in)
 		if err != nil {
-			fmt.Println("Error writing to file:", err)
+			log.Println("Error writing file uncaught by file handler:", err)
 		}
 	}
 }

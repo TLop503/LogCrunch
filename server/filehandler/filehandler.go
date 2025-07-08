@@ -2,6 +2,7 @@ package filehandler
 
 import (
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -48,6 +49,34 @@ func WriteToFile(filePath string, create bool, append bool, payload string) erro
 	_, err = file.WriteString(payload + "\n")
 	if err != nil {
 		return fmt.Errorf("error writing to file: %w", err)
+	}
+
+	return nil
+}
+
+// RotateFile copies the contents of a file to a new location for archival purposes.
+// filePath is the original file, rotationDestination is the new or existing file to write to
+// append defines whether to append (true) or overwrite (false) any potentially existing data
+// by default if the rotationDestination does not exist it will be created.
+// Note! if file to rotate does not exist, this function just does nothing w/o error
+func RotateFile(filePath string, rotationDestination string, append bool) error {
+	// Check if the file exists
+	_, err := os.Stat(filePath)
+
+	if os.IsNotExist(err) {
+		log.Printf("File (%s) to rotate does not exist!", filePath)
+		return nil
+	}
+
+	contents, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error reading file (%s): %w", filePath, err)
+	}
+
+	err = WriteToFile(rotationDestination, true, append, string(contents))
+	if err != nil {
+		// since WriteToFile has verbose errors, we can just pass it upstream
+		return fmt.Errorf("func WriteToFile error from RotateFile: %w", err)
 	}
 
 	return nil

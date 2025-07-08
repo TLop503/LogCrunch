@@ -4,11 +4,13 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"github.com/TLop503/LogCrunch/server/filehandler"
+	"github.com/TLop503/LogCrunch/server/self_logging"
+	"github.com/TLop503/LogCrunch/structs"
 	"log"
 	"net"
 	"os"
-
-	"github.com/TLop503/LogCrunch/server/filehandler"
+	"time"
 )
 
 func main() {
@@ -41,22 +43,41 @@ func main() {
 	defer listener.Close()
 
 	log.Printf("TLS server listening on %s:%s\n", host, port)
+	// log starting point
+	filehandler.RotateFile("/var/log/LogCrunch/firehose.log",
+		"/var/log/LogCrunch/old_firehose.log",
+		true,
+	)
+
+	startLog := self_logging.CreateStartLog(host, port)
+	filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
 
 	// accept incoming transmissions indefinitely until we are killed
+	connList := structs.NewConnList()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			fmt.Errorf("Error accepting connection:", err)
 			continue
 		}
-		log.Println("Client connected:", conn.RemoteAddr())
-		go handleConnection(conn)
+		connList.AddToConnList(conn)
+		go handleConnection(conn, connList)
 	}
 }
 
-func handleConnection(conn net.Conn) {
+// takes an active connection and a pointer to the list of connections
+// processes incoming logs (currently just writes to file)
+// and updates the connection in the list when it is closed.
+func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 	defer conn.Close()
 	reader := bufio.NewReader(conn)
+
+	host, _, err := net.SplitHostPort(conn.RemoteAddr().String())
+
+	if err != nil {
+		fmt.Println("Invalid remote address:", conn.RemoteAddr())
+		return
+	}
 
 	for {
 		hb_in, err := reader.ReadString('\n')
@@ -65,6 +86,20 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
-		filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, true, hb_in)
+		// Read connection from list
+		// TODO: is mutex required here? could the connlist get away without one, since each conn has one?
+		connList.RLock()
+		trackedConn, ok := connList.Connections[host]
+		connList.RUnlock()
+		if ok {
+			trackedConn.Lock()
+			trackedConn.LastSeen = time.Now() // this should update after each received log entry.
+			trackedConn.Unlock()
+		}
+
+		err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, true, hb_in)
+		if err != nil {
+			log.Println("Error writing file uncaught by file handler:", err)
+		}
 	}
 }

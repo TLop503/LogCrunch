@@ -2,7 +2,7 @@ package heartbeat
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/TLop503/LogCrunch/structs"
@@ -29,7 +29,7 @@ func Heartbeat(logChan chan<- string, hostname string) {
 		//convert our struct to JSON
 		jsonData, err := json.Marshal(hb)
 		if err != nil {
-			fmt.Println("Error marshaling JSON:", err)
+			log.Println("Error marshaling JSON:", err)
 			break
 		}
 

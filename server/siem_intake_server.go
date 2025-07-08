@@ -42,7 +42,7 @@ func main() {
 	}
 	defer listener.Close()
 
-	fmt.Printf("TLS server listening on %s:%s\n", host, port)
+	log.Printf("TLS server listening on %s:%s\n", host, port)
 	// log starting point
 	filehandler.RotateFile("/var/log/LogCrunch/firehose.log",
 		"/var/log/LogCrunch/old_firehose.log",
@@ -57,7 +57,7 @@ func main() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("Error accepting connection:", err)
+			fmt.Errorf("Error accepting connection:", err)
 			continue
 		}
 		connList.AddToConnList(conn)
@@ -82,7 +82,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 	for {
 		hb_in, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Connection closed:", err)
+			log.Println("Connection closed:", err)
 			return
 		}
 

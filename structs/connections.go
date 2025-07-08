@@ -1,7 +1,6 @@
 package structs
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"sync"
@@ -57,8 +56,8 @@ func (ct *ConnectionList) AddToConnList(conn net.Conn) {
 }
 
 func (ct *ConnectionList) print() {
-	fmt.Println("Active connections:")
+	log.Println("Active connections:")
 	for _, conn := range ct.Connections {
-		fmt.Printf("- %s / First seen: %s / Last Seen: %s\n", conn.RemoteAddr, conn.FirstSeen, conn.LastSeen)
+		log.Printf("- %s / First seen: %s / Last Seen: %s\n", conn.RemoteAddr, conn.FirstSeen, conn.LastSeen)
 	}
 }

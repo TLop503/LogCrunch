@@ -22,7 +22,7 @@ else
     echo "TLS certs already exist, skipping generation."
 fi
 
-./bins/siem_intake_server $HOST $PORT crypto/server.crt crypto/server.key &
+sudo ./bins/siem_intake_server $HOST $PORT crypto/server.crt crypto/server.key &
 sleep 2
 ./bins/siem_agent $HOST $PORT targets.cfg n & # use default example targets file, and don't verify crypto
 sleep 8

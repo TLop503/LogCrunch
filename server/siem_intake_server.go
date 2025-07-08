@@ -44,7 +44,6 @@ func main() {
 
 	fmt.Printf("TLS server listening on %s:%s\n", host, port)
 	// log starting point
-	// TODO: finalize starting message
 	filehandler.RotateFile("/var/log/LogCrunch/firehose.log",
 		"/var/log/LogCrunch/old_firehose.log",
 		true,

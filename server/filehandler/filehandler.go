@@ -4,20 +4,26 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 // WriteToFile writes a payload to a file, creating or appending based on flags.
-func WriteToFile(filePath string, create bool, append bool, payload string) error {
+// WriteToFile writes a payload to a file, creating or appending based on flags.
+func WriteToFile(path string, create bool, append bool, payload string) error {
 	var file *os.File
 	var err error
 
 	// Check if the file exists
-	_, err = os.Stat(filePath)
+	_, err = os.Stat(path)
 
 	if os.IsNotExist(err) {
 		if create {
+			// Create intermediate directories
+			if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+				return fmt.Errorf("mkdir err: %v", err)
+			}
 			// Create the file if it doesn't exist and create flag is true
-			file, err = os.Create(filePath)
+			file, err = os.Create(path)
 			if err != nil {
 				return fmt.Errorf("error creating file: %w", err)
 			}
@@ -36,7 +42,7 @@ func WriteToFile(filePath string, create bool, append bool, payload string) erro
 			flags |= os.O_TRUNC
 		}
 
-		file, err = os.OpenFile(filePath, flags, 0644)
+		file, err = os.OpenFile(path, flags, 0644)
 
 		if err != nil {
 			return fmt.Errorf("error opening file: %w", err)

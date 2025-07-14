@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/server/self_logging"
@@ -83,11 +84,27 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 		return
 	}
 
+	hostNameSet := false
+	hostname := ""
+
 	for {
-		hb_in, err := reader.ReadString('\n')
+		agentFeedIn, err := reader.ReadString('\n')
 		if err != nil {
 			log.Println("Connection closed:", err)
 			return
+		}
+
+		if !hostNameSet {
+			var payload map[string]interface{}
+			if err := json.Unmarshal([]byte(agentFeedIn), &payload); err != nil {
+				log.Println("Invalid JSON when scanning for hostname:", err)
+			} else if val, ok := payload["host"]; ok {
+				if hostStr, ok := val.(string); ok {
+					hostname = hostStr
+					hostNameSet = true
+					fmt.Println("Hostname: ", hostname)
+				}
+			}
 		}
 
 		// Read connection from list
@@ -98,10 +115,11 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 		if ok {
 			trackedConn.Lock()
 			trackedConn.LastSeen = time.Now() // this should update after each received log entry.
+			trackedConn.Hostname = hostname
 			trackedConn.Unlock()
 		}
 
-		err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, true, hb_in)
+		err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, true, agentFeedIn)
 		if err != nil {
 			log.Println("Error writing file uncaught by file handler:", err)
 		}

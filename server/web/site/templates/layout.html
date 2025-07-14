@@ -1,0 +1,16 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LogCrunch</title>
+</head>
+<body>
+<nav>
+    <a href="/">Home</a>
+</nav>
+<main>
+    {{ block "content" . }}{{ end }}
+</main>
+</body>
+</html>
+{{ end }}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/server/self_logging"
+	web "github.com/TLop503/LogCrunch/server/web"
 	"github.com/TLop503/LogCrunch/structs"
 	"log"
 	"net"
@@ -52,6 +53,8 @@ func main() {
 	startLog := self_logging.CreateStartLog(host, port)
 	filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
 
+	// start web server
+	web.Start(":8080")
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
 	for {

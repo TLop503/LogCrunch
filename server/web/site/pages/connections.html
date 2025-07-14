@@ -22,11 +22,13 @@
     <tr>
         <td>{{ .RemoteAddr }}</td>
         <td>{{ .Hostname }}</td>
-        <td>TODO</td>
+        <td>
+            {{ if .Alias }}{{ .Alias }}{{ end }}
+            <a href="/alias/edit?ip={{ .RemoteAddr }}">Edit</a>
+        </td>
         <td>{{ .LastSeen }}</td>
     </tr>
     {{ end }}
     {{ end }}
 </table>
-<script src="/static/prettyConnectionTime.js"></script>
 {{ end }}

@@ -119,7 +119,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 			trackedConn.Unlock()
 		}
 
-		err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, true, agentFeedIn)
+		err = filehandler.WriteToFile("/tmp/LogCrunch/firehose.log", true, true, agentFeedIn)
 		if err != nil {
 			log.Println("Error writing file uncaught by file handler:", err)
 		}

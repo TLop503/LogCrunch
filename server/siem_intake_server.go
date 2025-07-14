@@ -53,10 +53,11 @@ func main() {
 	startLog := self_logging.CreateStartLog(host, port)
 	filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
 
-	// start web server
-	web.Start(":8080")
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
+	// start web server
+	web.Start(":8080", connList)
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {

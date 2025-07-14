@@ -12,6 +12,7 @@ type Connection struct {
 	RemoteAddr string
 	FirstSeen  time.Time
 	LastSeen   time.Time
+	Hostname   string
 }
 
 type ConnectionList struct {

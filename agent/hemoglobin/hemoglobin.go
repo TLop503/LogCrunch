@@ -1,7 +1,11 @@
 package hemoglobin
 
 import (
+	"encoding/json"
+	"github.com/TLop503/LogCrunch/agent/utils"
+	"github.com/TLop503/LogCrunch/structs"
 	"log"
+	"time"
 
 	"github.com/hpcloud/tail"
 )
@@ -35,6 +39,18 @@ func ReadLog(logChan chan<- string, path string) {
 		}
 		// write over wire
 		//TODO! add parsing
-		logChan <- line.Text
+
+		lcLog := structs.Log{
+			Host:      utils.GetHostName(),
+			Timestamp: time.Now().Unix(),
+			Type:      path,
+			Payload:   line.Text,
+		}
+		jsonData, err := json.Marshal(lcLog)
+		if err != nil {
+			log.Printf("Error marshaling JSON: %v", err)
+		}
+
+		logChan <- string(jsonData)
 	}
 }

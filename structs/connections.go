@@ -12,6 +12,8 @@ type Connection struct {
 	RemoteAddr string
 	FirstSeen  time.Time
 	LastSeen   time.Time
+	Hostname   string
+	Alias      string
 }
 
 type ConnectionList struct {
@@ -52,7 +54,6 @@ func (ct *ConnectionList) AddToConnList(conn net.Conn) {
 		}
 	}
 
-	ct.print()
 }
 
 func (ct *ConnectionList) print() {

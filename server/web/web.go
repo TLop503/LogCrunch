@@ -35,7 +35,7 @@ func Start(addr string, connList *structs.ConnectionList) {
 	mux.HandleFunc("/alias", handleAliasSet(connList))
 	mux.HandleFunc("/alias/edit", handleAliasEditForm(connList, templates))
 
-	// Serve static files
+	// Serve static files as subtree of fs
 	staticFS, err := fs.Sub(templateFS, "site/static")
 	if err != nil {
 		log.Fatalf("error creating static filesystem: %v", err)
@@ -80,14 +80,19 @@ func servePage(templateName string, data any) http.HandlerFunc {
 	}
 }
 
+// handleAliasEditForm renders a form to edit the alias for a given connection.
+// expects a GET request with the `ip` parameter in the query string.
+// form is rendered using the "alias-edit" template.
 func handleAliasEditForm(connList *structs.ConnectionList, tmpl *template.Template) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// get ip addr from query (request)
 		ip := r.URL.Query().Get("ip")
 		if ip == "" {
 			http.Error(w, "Missing IP parameter", http.StatusBadRequest)
 			return
 		}
 
+		// lookup the connection by IP
 		connList.RLock()
 		conn, ok := connList.Connections[ip]
 		connList.RUnlock()
@@ -97,6 +102,7 @@ func handleAliasEditForm(connList *structs.ConnectionList, tmpl *template.Templa
 			return
 		}
 
+		// safely extract the alias and remote address under lock
 		conn.Lock()
 		data := struct {
 			RemoteAddr string
@@ -107,6 +113,7 @@ func handleAliasEditForm(connList *structs.ConnectionList, tmpl *template.Templa
 		}
 		conn.Unlock()
 
+		// render the alias-edit template with the extracted connection info
 		err := tmpl.ExecuteTemplate(w, "alias-edit", data)
 		if err != nil {
 			http.Error(w, "Template rendering error: "+err.Error(), http.StatusInternalServerError)
@@ -114,21 +121,27 @@ func handleAliasEditForm(connList *structs.ConnectionList, tmpl *template.Templa
 	}
 }
 
+// handleAliasSet processes the submitted alias form and updates the in-memory connection alias.
+// expects a POST request with `ip` and `alias` fields.
 func handleAliasSet(connList *structs.ConnectionList) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// only allow POST method
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
+		// extract form values
 		ip := r.FormValue("ip")
 		alias := r.FormValue("alias")
 
+		// validate alias length (max 32 characters)
 		if len(alias) > 32 {
 			http.Error(w, "Alias too long (max 32 chars)", http.StatusBadRequest)
 			return
 		}
 
+		// lookup the connection by IP
 		connList.RLock()
 		conn, ok := connList.Connections[ip]
 		connList.RUnlock()
@@ -138,10 +151,12 @@ func handleAliasSet(connList *structs.ConnectionList) http.HandlerFunc {
 			return
 		}
 
+		// safely update the alias
 		conn.Lock()
 		conn.Alias = alias
 		conn.Unlock()
 
+		// re-dir back to the connection list after saving
 		http.Redirect(w, r, "/connections", http.StatusSeeOther)
 	}
 }

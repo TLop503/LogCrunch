@@ -1,3 +1,4 @@
+// Parse long verbose date into simple format.
 document.addEventListener("DOMContentLoaded", () => {
     const rows = document.querySelectorAll("table tr:not(:first-child)");
 
@@ -22,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const dateObj = new Date(isoStr);
 
+        // failsafe
         if (isNaN(dateObj.getTime())) {
             td.textContent = raw; // fallback original text
             return;

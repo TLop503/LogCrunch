@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/TLop503/LogCrunch/server/filehandler"
-
 	"github.com/TLop503/LogCrunch/structs"
 )
 
@@ -36,6 +35,7 @@ func Start(addr string, connList *structs.ConnectionList) {
 	mux.HandleFunc("/alias", handleAliasSet(connList))
 	mux.HandleFunc("/alias/edit", handleAliasEditForm(connList, templates))
 	mux.HandleFunc("/logs", serveLogPage())
+
 
 	// Serve static files as subtree of fs
 	staticFS, err := fs.Sub(templateFS, "site/static")

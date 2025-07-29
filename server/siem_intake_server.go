@@ -116,10 +116,10 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 			trackedConn.Lock()
 			trackedConn.LastSeen = time.Now() // this should update after each received log entry.
 			trackedConn.Hostname = hostname
-			trackedConn.Unlock()
+			trackedConn.Unlock()s
 		}
 
-		err = filehandler.WriteToFile("/tmp/LogCrunch/firehose.log", true, true, agentFeedIn)
+		err = filehandler.WriteToFile(filehandler.LOG_INTAKE_DESTINATION, true, true, agentFeedIn)
 		if err != nil {
 			log.Println("Error writing file uncaught by file handler:", err)
 		}

@@ -5,14 +5,15 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/TLop503/LogCrunch/server/filehandler"
-	"github.com/TLop503/LogCrunch/server/self_logging"
-	web "github.com/TLop503/LogCrunch/server/web"
-	"github.com/TLop503/LogCrunch/structs"
 	"log"
 	"net"
 	"os"
 	"time"
+
+	"github.com/TLop503/LogCrunch/server/filehandler"
+	"github.com/TLop503/LogCrunch/server/self_logging"
+	web "github.com/TLop503/LogCrunch/server/web"
+	"github.com/TLop503/LogCrunch/structs"
 )
 
 func main() {
@@ -119,7 +120,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 			trackedConn.Unlock()
 		}
 
-		err = filehandler.WriteToFile("/tmp/LogCrunch/firehose.log", true, true, agentFeedIn)
+		err = filehandler.WriteToFile(filehandler.LOG_INTAKE_DESTINATION, true, true, agentFeedIn)
 		if err != nil {
 			log.Println("Error writing file uncaught by file handler:", err)
 		}

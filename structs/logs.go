@@ -6,3 +6,7 @@ type Log struct {
 	Type      string      `json:"type"`
 	Payload   interface{} `json:"payload"`
 }
+
+type IntakeLogFileData struct {
+	FileContent string `json:"fileContent"`
+}

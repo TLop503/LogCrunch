@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/structs"
 )
 
@@ -20,8 +21,7 @@ var templates *template.Template
 func Start(addr string, connList *structs.ConnectionList) {
 	var err error
 	templates, err = template.ParseFS(templateFS,
-		"site/templates/base.html",
-		"site/templates/navbar.html",
+		"site/templates/*.html",
 		"site/pages/*.html",
 	)
 	if err != nil {
@@ -34,6 +34,8 @@ func Start(addr string, connList *structs.ConnectionList) {
 	mux.HandleFunc("/connections", serveConnectionsPage(connList))
 	mux.HandleFunc("/alias", handleAliasSet(connList))
 	mux.HandleFunc("/alias/edit", handleAliasEditForm(connList, templates))
+	mux.HandleFunc("/logs", serveLogPage())
+
 
 	// Serve static files as subtree of fs
 	staticFS, err := fs.Sub(templateFS, "site/static")
@@ -62,6 +64,24 @@ func serveConnectionsPage(connList *structs.ConnectionList) http.HandlerFunc {
 		connList.RUnlock()
 
 		err := templates.ExecuteTemplate(w, "connections", connections)
+		if err != nil {
+			log.Printf("template error: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}
+}
+
+// serveLogPage renders the contents of the intake log file
+func serveLogPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		data, err := filehandler.LogFileToData()
+		if err != nil {
+			http.Error(w, "Failed to parse log intake file", http.StatusInternalServerError)
+			return
+		}
+
+		// Try passing a pointer to the struct
+		err = templates.ExecuteTemplate(w, "logs", data)
 		if err != nil {
 			log.Printf("template error: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)

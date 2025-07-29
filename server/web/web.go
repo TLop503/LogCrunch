@@ -20,7 +20,6 @@ var templates *template.Template
 func Start(addr string, connList *structs.ConnectionList) {
 	var err error
 	templates, err = template.ParseFS(templateFS,
-		"site/templates/base.html",
 		"site/templates/navbar.html",
 		"site/pages/*.html",
 	)

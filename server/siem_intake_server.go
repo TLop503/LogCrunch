@@ -5,14 +5,15 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/TLop503/LogCrunch/server/filehandler"
-	"github.com/TLop503/LogCrunch/server/self_logging"
-	web "github.com/TLop503/LogCrunch/server/web"
-	"github.com/TLop503/LogCrunch/structs"
 	"log"
 	"net"
 	"os"
 	"time"
+
+	"github.com/TLop503/LogCrunch/server/filehandler"
+	"github.com/TLop503/LogCrunch/server/self_logging"
+	web "github.com/TLop503/LogCrunch/server/web"
+	"github.com/TLop503/LogCrunch/structs"
 )
 
 func main() {
@@ -116,7 +117,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 			trackedConn.Lock()
 			trackedConn.LastSeen = time.Now() // this should update after each received log entry.
 			trackedConn.Hostname = hostname
-			trackedConn.Unlock()s
+			trackedConn.Unlock()
 		}
 
 		err = filehandler.WriteToFile(filehandler.LOG_INTAKE_DESTINATION, true, true, agentFeedIn)

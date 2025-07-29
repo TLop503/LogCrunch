@@ -8,5 +8,5 @@ type Log struct {
 }
 
 type IntakeLogFileData struct {
-	FileContent string
+	FileContent string `json:"fileContent"`
 }

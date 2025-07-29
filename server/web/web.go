@@ -2,11 +2,12 @@ package web
 
 import (
 	"embed"
-	"github.com/TLop503/LogCrunch/server/filehandler"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
+
+	"github.com/TLop503/LogCrunch/server/filehandler"
 
 	"github.com/TLop503/LogCrunch/structs"
 )
@@ -21,7 +22,7 @@ var templates *template.Template
 func Start(addr string, connList *structs.ConnectionList) {
 	var err error
 	templates, err = template.ParseFS(templateFS,
-		"site/templates/navbar.html",
+		"site/templates/*.html",
 		"site/pages/*.html",
 	)
 	if err != nil {
@@ -76,8 +77,10 @@ func serveLogPage() http.HandlerFunc {
 		data, err := filehandler.LogFileToData()
 		if err != nil {
 			http.Error(w, "Failed to parse log intake file", http.StatusInternalServerError)
+			return
 		}
 
+		// Try passing a pointer to the struct
 		err = templates.ExecuteTemplate(w, "logs", data)
 		if err != nil {
 			log.Printf("template error: %v", err)

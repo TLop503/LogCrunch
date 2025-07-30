@@ -1,8 +1,10 @@
 package utils
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
+	"github.com/TLop503/LogCrunch/structs"
+	"net"
 	"os"
 )
 
@@ -15,14 +17,12 @@ func GetHostName() string {
 	return hostname
 }
 
-// writerRoutine handles all writes to the server
-func WriterRoutine(writer *bufio.Writer, dataChan <-chan string) {
-	for data := range dataChan {
-		_, err := writer.WriteString(data + "\n")
+func TransmitJson(conn net.Conn, logChan <-chan structs.Log) {
+	for log := range logChan {
+		err := json.NewEncoder(conn).Encode(log)
 		if err != nil {
-			fmt.Println("Error writing data:", err)
+			fmt.Println("Error marshaling JSON:", err)
 			return
 		}
-		writer.Flush()
 	}
 }

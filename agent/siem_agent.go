@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
 	"fmt"
 	"github.com/TLop503/LogCrunch/structs"
@@ -36,14 +35,13 @@ func main() {
 		return
 	}
 	defer conn.Close()
-	writer := bufio.NewWriter(conn)
 	log.Printf("Connected to %s:%s via TLS\n", host, port)
 
 	// create channel for thread-safe writes
-	logChan := make(chan string)
+	logChan := make(chan structs.Log)
 
 	// start the writer
-	go utils.WriterRoutine(writer, logChan)
+	go utils.TransmitJson(conn, logChan)
 
 	// spin up a heartbeat goroutine to send proof of life
 	// once every minute

@@ -3,28 +3,31 @@ package heartbeat
 import (
 	"encoding/json"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/TLop503/LogCrunch/structs"
 )
 
-// format the actual log payload into a struct
-func makeHeartbeat(typ string, seq int, hostname string) structs.Heartbeat {
-	return structs.Heartbeat{
-		Type:      typ,
-		Host:      hostname,
-		Timestamp: time.Now().Unix(),
-		Seq:       seq,
-	}
-}
-
-// create hb via makeHeartbeat, then write to writer (which is sent over wire).
 func Heartbeat(logChan chan<- string, hostname string) {
 	seq := 0
 	for { //forever
 
-		hb := makeHeartbeat("proof_of_life", seq, hostname)
-		seq++
+		// write log payload as pure json
+		var seqAsJson interface{}
+		rawHb := `{"seq":` + strconv.Itoa(seq) + `}`
+		err := json.Unmarshal([]byte(rawHb), &seqAsJson)
+		if err != nil {
+			log.Println("Error unmarshaling JSON:", err)
+		}
+
+		hb := structs.Log{
+			Host:      hostname,
+			Timestamp: time.Now().Unix(),
+			Type:      "Heartbeat",
+			Parsed:    nil,
+			Raw:       seqAsJson,
+		}
 
 		//convert our struct to JSON
 		jsonData, err := json.Marshal(hb)
@@ -37,5 +40,6 @@ func Heartbeat(logChan chan<- string, hostname string) {
 		logChan <- string(jsonData)
 
 		time.Sleep(60 * time.Second) // Send a heartbeat every minute. TODO: make this easy to configure.
+		seq++
 	}
 }

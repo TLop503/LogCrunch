@@ -1,10 +1,12 @@
 package structs
 
 type Log struct {
-	Host      string      `json:"host"`
-	Timestamp int64       `json:"timestamp"`
-	Type      string      `json:"type"`
-	Payload   interface{} `json:"payload"`
+	Host      string `json:"host"`
+	Timestamp int64  `json:"timestamp"`
+	Type      string `json:"type"`
+	// Config    YamlConfig  `json:"config"`
+	Parsed interface{} `json:"parsed"`
+	Raw    interface{} `json:"raw"`
 }
 
 type IntakeLogFileData struct {

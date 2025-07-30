@@ -44,7 +44,7 @@ func ReadLog(logChan chan<- string, path string) {
 			Host:      utils.GetHostName(),
 			Timestamp: time.Now().Unix(),
 			Type:      path,
-			Payload:   line.Text,
+			Raw:       line.Text,
 		}
 		jsonData, err := json.Marshal(lcLog)
 		if err != nil {

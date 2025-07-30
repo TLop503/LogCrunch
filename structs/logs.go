@@ -9,17 +9,10 @@ type Log struct {
 	Raw       string      `json:"raw"`
 }
 
-type IntakeLogFileData struct {
-	FileContent string `json:"fileContent"`
-}
-
-type Target struct {
-	Name     string `yaml:"name"`
-	Path     string `yaml:"path"`
-	Severity string `yaml:"severity"`
-	Module   string `yaml:"module"`
-}
-
-type YamlConfig struct {
-	Targets []Target `yaml:"Targets"`
+type SyslogEntry struct {
+	Timestamp string `json:"timestamp"`
+	Host      string `json:"host"`
+	Process   string `json:"process"`
+	PID       string `json:"pid"`
+	Message   string `json:"message"`
 }

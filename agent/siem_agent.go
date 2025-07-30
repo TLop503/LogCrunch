@@ -64,7 +64,7 @@ func main() {
 
 	// Start a hemoglobin instance for each target path
 	for _, target := range yamlConfig.Targets {
-		go hemoglobin.ReadLog(logChan, target.Path)
+		go hemoglobin.ReadLog(logChan, target)
 	}
 
 	// TODO: Add graceful shutdowns

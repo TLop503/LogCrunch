@@ -1,6 +1,7 @@
 package hemoglobin
 
 import (
+	"github.com/TLop503/LogCrunch/agent/hemoglobin/modules"
 	"github.com/TLop503/LogCrunch/agent/utils"
 	"github.com/TLop503/LogCrunch/structs"
 	"log"
@@ -13,7 +14,20 @@ import (
 Hemoglobin is a <routine> containing <data> that facilitates the transportation of <logs> in <agents>.
 */
 
-func ReadLog(logChan chan<- structs.Log, path string) {
+// wrap() is a helper function to prepare parsing modules for inclusion in the registry
+func wrap[T any](fn func(string) (*T, error)) func(string) (interface{}, error) {
+	return func(line string) (interface{}, error) {
+		return fn(line)
+	}
+}
+
+// mapping of modules specifiable in the config and written parsing modules
+var ParserRegistry = map[string]func(string) (interface{}, error){
+	"syslog": wrap(modules.ParseSyslog),
+}
+
+// watch a log file for updates as they come in
+func ReadLog(logChan chan<- structs.Log, config structs.Target) {
 	var seekOffset int64 = 0
 
 	tailConfig := tail.Config{
@@ -24,24 +38,31 @@ func ReadLog(logChan chan<- structs.Log, path string) {
 		Logger:    tail.DiscardingLogger,                         // Disable internal logging
 	}
 
-	t, err := tail.TailFile(path, tailConfig)
+	t, err := tail.TailFile(config.Path, tailConfig)
 	if err != nil {
 		log.Fatalf("Error opening log file: %v", err)
 	}
 
+	parser := ParserRegistry[config.Module]
+
 	for line := range t.Lines {
 		if line.Err != nil {
-			log.Printf("Error reading line from file %v: %v\n", path, line.Err)
+			log.Printf("Error reading line from file %v: %v\n", config.Path, line.Err)
 			continue
+		}
+
+		var parsed interface{}
+		if parser != nil {
+			parsed, _ = parser(line.Text) // ignore error for now
 		}
 
 		logEntry := structs.Log{
 			Host:      utils.GetHostName(),
 			Timestamp: time.Now().Unix(),
 			Type:      "TODO",
-			Path:      path,
+			Path:      config.Path,
 			Raw:       line.Text,
-			Parsed:    nil,
+			Parsed:    parsed,
 		}
 
 		// send to channel for writing across wire

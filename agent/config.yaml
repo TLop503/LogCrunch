@@ -3,7 +3,7 @@ Targets:
   - name: Auth
     path: /var/log/auth.log
     severity: low
-    module: tbd
+    module: syslog
   - name: Fail
     path: /var/log/faillog
     severity: high

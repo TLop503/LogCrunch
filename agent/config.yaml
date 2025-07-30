@@ -1,0 +1,15 @@
+---
+Targets:
+  - name: Auth
+    path: /var/log/auth.log
+    severity: low
+    module: tbd
+  - name: Fail
+    path: /var/log/faillog
+    severity: high
+    module: tbd
+  - name: Boot
+    path: /var/log/boot.log
+    severity: info
+    module: tbd
+...

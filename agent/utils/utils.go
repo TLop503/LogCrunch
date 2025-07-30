@@ -26,27 +26,3 @@ func WriterRoutine(writer *bufio.Writer, dataChan <-chan string) {
 		writer.Flush()
 	}
 }
-
-// readTargets reads the target log file paths from ./targets.cfg
-func ReadTargets(filePath string) ([]string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var paths []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line != "" {
-			paths = append(paths, line)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return paths, nil
-}

@@ -35,6 +35,7 @@ There are a few ways to run this project. You can download the latest [release](
 1. Start the agent, specifying:
    1. Host (IP of the box with the server)
    1. Port
+   1. The path to a config.yaml (see agent/config.yaml for example)
    1. Whether or not to verify the TLS certs being used (y/n)
 1. Logs will appear in `/var/log/LogCrunch/firehose.log` on the box running the intake server
 

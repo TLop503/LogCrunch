@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"github.com/TLop503/LogCrunch/structs"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 
@@ -47,16 +49,24 @@ func main() {
 	// once every minute
 	go heartbeat.Heartbeat(logChan, utils.GetHostName())
 
-	// Read log file paths from targets.cfg
-	targetPaths, err := utils.ReadTargets(cfg)
+	// Read log file paths from config file`
+	data, err := os.ReadFile(cfg)
 	if err != nil {
 		fmt.Errorf("Error reading targets file:", err)
 		return
 	}
 
+	var yamlConfig structs.YamlConfig
+
+	err = yaml.Unmarshal(data, &yamlConfig)
+	if err != nil {
+		fmt.Errorf("Error unmarshalling targets file:", err)
+		return
+	}
+
 	// Start a hemoglobin instance for each target path
-	for _, path := range targetPaths {
-		go hemoglobin.ReadLog(logChan, path)
+	for _, target := range yamlConfig.Targets {
+		go hemoglobin.ReadLog(logChan, target.Path)
 	}
 
 	// TODO: Add graceful shutdowns

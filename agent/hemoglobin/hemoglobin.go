@@ -59,7 +59,7 @@ func ReadLog(logChan chan<- structs.Log, config structs.Target) {
 		logEntry := structs.Log{
 			Host:      utils.GetHostName(),
 			Timestamp: time.Now().Unix(),
-			Type:      "TODO",
+			Type:      config.Name,
 			Path:      config.Path,
 			Raw:       line.Text,
 			Parsed:    parsed,

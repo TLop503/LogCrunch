@@ -5,37 +5,38 @@ import (
 	"github.com/TLop503/LogCrunch/agent/utils"
 	"github.com/TLop503/LogCrunch/structs"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/hpcloud/tail"
 )
 
-/*
-Hemoglobin is a <routine> containing <data> that facilitates the transportation of <logs> in <agents>.
-*/
-
-// wrap() is a helper function to prepare parsing modules for inclusion in the registry
-func wrap[T any](fn func(string) (*T, error)) func(string) (interface{}, error) {
-	return func(line string) (interface{}, error) {
-		return fn(line)
-	}
+// ParserEntry holds the regex and a function that returns an empty struct to parse into
+type ParserEntry struct {
+	Regex     *regexp.Regexp
+	NewStruct func() interface{}
 }
 
-// mapping of modules specifiable in the config and written parsing modules
-var ParserRegistry = map[string]func(string) (interface{}, error){
-	"syslog": wrap(modules.ParseSyslog),
+// MetaParserRegistry maps module names to their regex and struct constructors
+var MetaParserRegistry = map[string]ParserEntry{
+	"syslog": {
+		Regex:     modules.SyslogRegex,
+		NewStruct: func() interface{} { return new(structs.SyslogEntry) },
+	},
+	"apache": {
+		Regex:     modules.ApacheRegex,
+		NewStruct: func() interface{} { return new(structs.ApacheLogEntry) },
+	},
 }
 
-// watch a log file for updates as they come in
+// ReadLog watches a log file and parses lines with a generic meta parser
 func ReadLog(logChan chan<- structs.Log, config structs.Target) {
-	var seekOffset int64 = 0
-
 	tailConfig := tail.Config{
-		ReOpen:    true,                                          // Handle log rotation
-		Follow:    true,                                          // Continuously read new lines
-		MustExist: false,                                         // Don't error if the file doesn't exist initially
-		Location:  &tail.SeekInfo{Offset: seekOffset, Whence: 0}, // Start from the given offset (0 = beginning)
-		Logger:    tail.DiscardingLogger,                         // Disable internal logging
+		ReOpen:    true,
+		Follow:    true,
+		MustExist: false,
+		Location:  &tail.SeekInfo{Offset: 0, Whence: 0},
+		Logger:    tail.DiscardingLogger,
 	}
 
 	t, err := tail.TailFile(config.Path, tailConfig)
@@ -43,7 +44,7 @@ func ReadLog(logChan chan<- structs.Log, config structs.Target) {
 		log.Fatalf("Error opening log file: %v", err)
 	}
 
-	parser := ParserRegistry[config.Module]
+	parserEntry, ok := MetaParserRegistry[config.Module]
 
 	for line := range t.Lines {
 		if line.Err != nil {
@@ -52,8 +53,19 @@ func ReadLog(logChan chan<- structs.Log, config structs.Target) {
 		}
 
 		var parsed interface{}
-		if parser != nil {
-			parsed, _ = parser(line.Text) // ignore error for now
+
+		if ok {
+			// Create a new empty struct instance for this line
+			outputStruct := parserEntry.NewStruct()
+
+			// Parse line using the generic MetaParse function
+			err := modules.MetaParse(line.Text, parserEntry.Regex, outputStruct)
+			if err == nil {
+				parsed = outputStruct
+			} else {
+				log.Printf("Parse error for line in %v: %v", config.Path, err)
+				parsed = map[string]error{"Parsing error": err}
+			}
 		}
 
 		logEntry := structs.Log{
@@ -65,7 +77,6 @@ func ReadLog(logChan chan<- structs.Log, config structs.Target) {
 			Parsed:    parsed,
 		}
 
-		// send to channel for writing across wire
 		logChan <- logEntry
 	}
 }

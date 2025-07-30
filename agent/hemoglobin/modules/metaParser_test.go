@@ -32,7 +32,7 @@ func TestMetaParseApache_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var entry structs.ApacheLogEntry
-			err := MetaParse(tt.logLine, apacheRegex, &entry)
+			err := MetaParse(tt.logLine, ApacheRegex, &entry)
 			if err != nil {
 				t.Fatalf("MetaParse failed: %v", err)
 			}
@@ -47,7 +47,7 @@ func TestMetaParseApache_Malformed(t *testing.T) {
 	logLine := `this is not a valid apache log line`
 
 	var entry structs.ApacheLogEntry
-	err := MetaParse(logLine, apacheRegex, &entry)
+	err := MetaParse(logLine, ApacheRegex, &entry)
 	if err == nil {
 		t.Error("Expected error for malformed input, got none")
 	}
@@ -88,7 +88,7 @@ func TestMetaParseSyslog_Valid(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var entry structs.SyslogEntry
-			err := MetaParse(tt.logLine, syslogRegex, &entry)
+			err := MetaParse(tt.logLine, SyslogRegex, &entry)
 			if err != nil {
 				t.Fatalf("MetaParse failed: %v", err)
 			}
@@ -103,7 +103,7 @@ func TestMetaParseSyslog_Malformed(t *testing.T) {
 	logLine := `INVALID SYSLOG ENTRY`
 
 	var entry structs.SyslogEntry
-	err := MetaParse(logLine, syslogRegex, &entry)
+	err := MetaParse(logLine, SyslogRegex, &entry)
 	if err == nil {
 		t.Error("Expected error for malformed syslog input, got none")
 	}

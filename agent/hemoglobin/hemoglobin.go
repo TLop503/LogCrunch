@@ -17,20 +17,14 @@ type ParserEntry struct {
 	NewStruct func() interface{}
 }
 
-// MetaParserRegistry maps module names to their regex and struct constructors
-var MetaParserRegistry = map[string]ParserEntry{
-	"syslog": {
-		Regex:     modules.SyslogRegex,
-		NewStruct: func() interface{} { return new(structs.SyslogEntry) },
-	},
-	"apache": {
-		Regex:     modules.ApacheRegex,
-		NewStruct: func() interface{} { return new(structs.ApacheLogEntry) },
-	},
-}
-
 // ReadLog watches a log file and parses lines with a generic meta parser
-func ReadLog(logChan chan<- structs.Log, config structs.Target) {
+func ReadLog(logChan chan<- structs.Log, target structs.Target) {
+	parserModule, err := modules.HandleConfigTarget(target)
+	if err != nil {
+		log.Println("Error handling config target:", err)
+		return
+	}
+
 	tailConfig := tail.Config{
 		ReOpen:    true,
 		Follow:    true,
@@ -39,40 +33,31 @@ func ReadLog(logChan chan<- structs.Log, config structs.Target) {
 		Logger:    tail.DiscardingLogger,
 	}
 
-	t, err := tail.TailFile(config.Path, tailConfig)
+	t, err := tail.TailFile(target.Path, tailConfig)
 	if err != nil {
 		log.Fatalf("Error opening log file: %v", err)
 	}
 
-	parserEntry, ok := MetaParserRegistry[config.Module]
-
 	for line := range t.Lines {
 		if line.Err != nil {
-			log.Printf("Error reading line from file %v: %v\n", config.Path, line.Err)
+			log.Printf("Error reading line from file %v: %v\n", target.Path, line.Err)
 			continue
 		}
 
 		var parsed interface{}
 
-		if ok {
-			// Create a new empty struct instance for this line
-			outputStruct := parserEntry.NewStruct()
-
-			// Parse line using the generic MetaParse function
-			err := modules.MetaParse(line.Text, parserEntry.Regex, outputStruct)
-			if err == nil {
-				parsed = outputStruct
-			} else {
-				log.Printf("Parse error for line in %v: %v", config.Path, err)
-				parsed = map[string]error{"Parsing error": err}
-			}
+		// Parse line using the generic MetaParse function
+		parsed, err := modules.MetaParse(line.Text, parserModule)
+		if err != nil {
+			log.Printf("Parse error for line in %v: %v", target.Path, err)
+			parsed = map[string]error{"Parsing error": err}
 		}
 
 		logEntry := structs.Log{
 			Host:      utils.GetHostName(),
 			Timestamp: time.Now().Unix(),
-			Type:      config.Name,
-			Path:      config.Path,
+			Type:      target.Name,
+			Path:      target.Path,
 			Raw:       line.Text,
 			Parsed:    parsed,
 		}

@@ -22,9 +22,9 @@ func main() {
 	host := os.Args[1]
 	port := os.Args[2]
 	cfg := os.Args[3]
-	fmt.Println(os.Args[4])
+	//fmt.Println(os.Args[4])
 	ISV := (os.Args[4] == "n")
-	fmt.Println(ISV)
+	//fmt.Println(ISV)
 
 	// Configure TLS
 	config := &tls.Config{InsecureSkipVerify: ISV} // Set to `false` in production with valid certs
@@ -54,15 +54,18 @@ func main() {
 		return
 	}
 
+	log.Println("Attempting to unmarshal targets...", string(data))
 	var yamlConfig structs.YamlConfig
-
 	err = yaml.Unmarshal(data, &yamlConfig)
 	if err != nil {
-		fmt.Errorf("Error unmarshalling targets file:", err)
+		log.Fatalln("Error unmarshalling targets file:", err)
 		return
 	}
+	log.Println("Successfully unmarshalled targets.")
 
 	// Start a hemoglobin instance for each target path
+	log.Println("Loaded targets:", yamlConfig.Targets)
+	log.Println("Starting to iterate and spawn hemoglobins")
 	for _, target := range yamlConfig.Targets {
 		go hemoglobin.ReadLog(logChan, target)
 	}

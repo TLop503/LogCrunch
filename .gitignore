@@ -34,5 +34,5 @@ release/*
 # or archives
 *.tar.gz
 
-# goland config stuff
+# goland target stuff
 .idea/*

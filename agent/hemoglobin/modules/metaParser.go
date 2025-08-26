@@ -2,46 +2,56 @@ package modules
 
 import (
 	"fmt"
-	"reflect"
-	"regexp"
+	"github.com/TLop503/LogCrunch/structs"
+	"strconv"
 )
 
-var SyslogRegex = regexp.MustCompile(`^(?P<timestamp>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<host>\S+)\s+(?P<process>\w+)(?:\[(?P<pid>\d+)\])?:\s+(?P<message>.*)$`)
-var ApacheRegex = regexp.MustCompile(`(?P<remote>\S+) (?P<remote_long>\S+) (?P<remote_user>\S+) \[(?P<timestamp>[^\]]+)\] "(?P<request>[^"]*)" (?P<status_code>\d{3}) (?P<size>\S+)`)
-
-func MetaParse(log string, regex *regexp.Regexp, outputStruct interface{}) error {
-	match := regex.FindStringSubmatch(log)
+func MetaParse(log string, module structs.ParserModule) (map[string]interface{}, error) {
+	match := module.Regex.FindStringSubmatch(log)
 	if match == nil {
-		return fmt.Errorf("no match found")
+		return nil, fmt.Errorf("no match found")
 	}
 
-	names := regex.SubexpNames()
+	names := module.Regex.SubexpNames()
 	if len(names) != len(match) {
-		return fmt.Errorf("mismatch in number of capture groups")
+		return nil, fmt.Errorf("capture group count mismatch")
 	}
 
-	val := reflect.ValueOf(outputStruct)
-	if val.Kind() != reflect.Ptr || val.IsNil() {
-		return fmt.Errorf("outputStruct must be a non-nil pointer")
-	}
-	val = val.Elem()
-	typ := val.Type()
+	parsedLog := make(map[string]interface{})
 
 	for i, name := range names {
 		if i == 0 || name == "" {
-			continue // skip the full match or unnamed groups
+			continue // skip full match or unnamed groups
 		}
 
-		for j := 0; j < typ.NumField(); j++ {
-			field := typ.Field(j)
-			tag := field.Tag.Get("logfield")
-			if tag == name {
-				if val.Field(j).CanSet() {
-					val.Field(j).SetString(match[i])
-				}
+		// Determine type from schema
+		fieldType, ok := module.Schema[name]
+		if !ok {
+			// if the schema doesn't include this field, just store as string
+			parsedLog[name] = match[i]
+			continue
+		}
+
+		// attempt parse numbers to correct type
+		// if conversion fails, assign as strings instead
+		switch fieldType {
+		case "int":
+			val, err := strconv.Atoi(match[i])
+			if err != nil {
+				parsedLog[name] = match[i]
 			}
+			parsedLog[name] = val
+		case "float":
+			val, err := strconv.ParseFloat(match[i], 64)
+			if err != nil {
+				parsedLog[name] = match[i]
+			}
+			parsedLog[name] = val
+		default:
+			// if not parsed to number just use string
+			parsedLog[name] = match[i]
 		}
 	}
 
-	return nil
+	return parsedLog, nil
 }

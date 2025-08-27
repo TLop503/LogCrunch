@@ -23,7 +23,7 @@ func CreateStartLog(host string, port string) string {
 		Host:      self,
 		Timestamp: time.Now().Unix(),
 		Type:      "LogCrunch Server",
-		Payload:   startMessage,
+		Raw:       startMessage,
 	}
 
 	startLogJson, err := json.Marshal(startLog)

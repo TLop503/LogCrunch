@@ -1,41 +1,33 @@
 package heartbeat
 
 import (
-	"encoding/json"
-	"log"
+	"strconv"
 	"time"
 
 	"github.com/TLop503/LogCrunch/structs"
 )
 
-// format the actual log payload into a struct
-func makeHeartbeat(typ string, seq int, hostname string) structs.Heartbeat {
-	return structs.Heartbeat{
-		Type:      typ,
-		Host:      hostname,
-		Timestamp: time.Now().Unix(),
-		Seq:       seq,
-	}
-}
-
-// create hb via makeHeartbeat, then write to writer (which is sent over wire).
-func Heartbeat(logChan chan<- string, hostname string) {
+// Heartbeat creates and transmits an "I'm alive" log every minute
+func Heartbeat(logChan chan<- structs.Log, hostname string) {
 	seq := 0
-	for { //forever
+	for {
+		// Create raw JSON as a map
+		seqAsJSON := map[string]int{"seq": seq}
 
-		hb := makeHeartbeat("proof_of_life", seq, hostname)
-		seq++
-
-		//convert our struct to JSON
-		jsonData, err := json.Marshal(hb)
-		if err != nil {
-			log.Println("Error marshaling JSON:", err)
-			break
+		// Create the log struct
+		hb := structs.Log{
+			Host:      hostname,
+			Timestamp: time.Now().Unix(),
+			Type:      "Heartbeat",
+			Path:      "self",
+			Parsed:    seqAsJSON,
+			Raw:       strconv.Itoa(seq),
 		}
 
-		// Send the JSON data to the writer via chan
-		logChan <- string(jsonData)
+		// Send the structured log over the channel
+		logChan <- hb
 
-		time.Sleep(60 * time.Second) // Send a heartbeat every minute. TODO: make this easy to configure.
+		time.Sleep(60 * time.Second)
+		seq++
 	}
 }

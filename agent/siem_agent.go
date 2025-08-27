@@ -1,9 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
 	"fmt"
+	"github.com/TLop503/LogCrunch/structs"
+	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 
@@ -21,9 +22,9 @@ func main() {
 	host := os.Args[1]
 	port := os.Args[2]
 	cfg := os.Args[3]
-	fmt.Println(os.Args[4])
+	//fmt.Println(os.Args[4])
 	ISV := (os.Args[4] == "n")
-	fmt.Println(ISV)
+	//fmt.Println(ISV)
 
 	// Configure TLS
 	config := &tls.Config{InsecureSkipVerify: ISV} // Set to `false` in production with valid certs
@@ -34,29 +35,39 @@ func main() {
 		return
 	}
 	defer conn.Close()
-	writer := bufio.NewWriter(conn)
 	log.Printf("Connected to %s:%s via TLS\n", host, port)
 
 	// create channel for thread-safe writes
-	logChan := make(chan string)
+	logChan := make(chan structs.Log)
 
 	// start the writer
-	go utils.WriterRoutine(writer, logChan)
+	go utils.TransmitJson(conn, logChan)
 
 	// spin up a heartbeat goroutine to send proof of life
 	// once every minute
 	go heartbeat.Heartbeat(logChan, utils.GetHostName())
 
-	// Read log file paths from targets.cfg
-	targetPaths, err := utils.ReadTargets(cfg)
+	// Read log file paths from config file`
+	data, err := os.ReadFile(cfg)
 	if err != nil {
 		fmt.Errorf("Error reading targets file:", err)
 		return
 	}
 
+	log.Println("Attempting to unmarshal targets...", string(data))
+	var yamlConfig structs.YamlConfig
+	err = yaml.Unmarshal(data, &yamlConfig)
+	if err != nil {
+		log.Fatalln("Error unmarshalling targets file:", err)
+		return
+	}
+	log.Println("Successfully unmarshalled targets.")
+
 	// Start a hemoglobin instance for each target path
-	for _, path := range targetPaths {
-		go hemoglobin.ReadLog(logChan, path)
+	log.Println("Loaded targets:", yamlConfig.Targets)
+	log.Println("Starting to iterate and spawn hemoglobins")
+	for _, target := range yamlConfig.Targets {
+		go hemoglobin.ReadLog(logChan, target)
 	}
 
 	// TODO: Add graceful shutdowns

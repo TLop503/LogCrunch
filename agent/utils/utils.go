@@ -1,11 +1,14 @@
 package utils
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
+	"github.com/TLop503/LogCrunch/structs"
+	"net"
 	"os"
 )
 
+// GetHostName is a wrapper to handle the error-case of os.Hostname
 func GetHostName() string {
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -15,38 +18,13 @@ func GetHostName() string {
 	return hostname
 }
 
-// writerRoutine handles all writes to the server
-func WriterRoutine(writer *bufio.Writer, dataChan <-chan string) {
-	for data := range dataChan {
-		_, err := writer.WriteString(data + "\n")
+// TransmitJson encodes json over a connection, reading inputs from a channel
+func TransmitJson(conn net.Conn, logChan <-chan structs.Log) {
+	for log := range logChan {
+		err := json.NewEncoder(conn).Encode(log)
 		if err != nil {
-			fmt.Println("Error writing data:", err)
+			fmt.Println("Error marshaling JSON:", err)
 			return
 		}
-		writer.Flush()
 	}
-}
-
-// readTargets reads the target log file paths from ./targets.cfg
-func ReadTargets(filePath string) ([]string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var paths []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line != "" {
-			paths = append(paths, line)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return paths, nil
 }

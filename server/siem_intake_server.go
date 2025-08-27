@@ -12,7 +12,7 @@ import (
 
 	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/server/self_logging"
-	web "github.com/TLop503/LogCrunch/server/web"
+	"github.com/TLop503/LogCrunch/server/web"
 	"github.com/TLop503/LogCrunch/structs"
 )
 

@@ -6,6 +6,12 @@ import (
 	"strconv"
 )
 
+// MetaParse parses logs into named fields and stages them for transmission
+// Takes a log (read from a file), and a module containing a regex and a schema
+// The log is processed with the regex, and the resulting named fields are
+// organized according to the schema
+// the final logcrunch log is sent to the log channel for transmission
+// to the siem server
 func MetaParse(log string, module structs.ParserModule) (map[string]interface{}, error) {
 	match := module.Regex.FindStringSubmatch(log)
 	if match == nil {

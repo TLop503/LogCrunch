@@ -11,6 +11,10 @@ import (
 	"github.com/hpcloud/tail"
 )
 
+/*
+	Hemoglobin is a <routine> containing <data> that facilitates the transportation of <logs> in <agents>.
+*/
+
 // ParserEntry holds the regex and a function that returns an empty struct to parse into
 type ParserEntry struct {
 	Regex     *regexp.Regexp
@@ -26,11 +30,11 @@ func ReadLog(logChan chan<- structs.Log, target structs.Target) {
 	}
 
 	tailConfig := tail.Config{
-		ReOpen:    true,
-		Follow:    true,
-		MustExist: false,
-		Location:  &tail.SeekInfo{Offset: 0, Whence: 0},
-		Logger:    tail.DiscardingLogger,
+		ReOpen:    true,                                 // handle rotation
+		Follow:    true,                                 // continuous
+		MustExist: false,                                // don't err if file dne yet
+		Location:  &tail.SeekInfo{Offset: 0, Whence: 0}, // start from end of file
+		Logger:    tail.DiscardingLogger,                // disable internal logging
 	}
 
 	t, err := tail.TailFile(target.Path, tailConfig)

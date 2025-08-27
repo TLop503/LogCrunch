@@ -7,6 +7,7 @@ import (
 	"github.com/TLop503/LogCrunch/structs"
 )
 
+// Heartbeat creates and transmits an "I'm alive" log every minute
 func Heartbeat(logChan chan<- structs.Log, hostname string) {
 	seq := 0
 	for {

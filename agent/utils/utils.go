@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// GetHostName is a wrapper to handle the error-case of os.Hostname
 func GetHostName() string {
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -17,6 +18,7 @@ func GetHostName() string {
 	return hostname
 }
 
+// TransmitJson encodes json over a connection, reading inputs from a channel
 func TransmitJson(conn net.Conn, logChan <-chan structs.Log) {
 	for log := range logChan {
 		err := json.NewEncoder(conn).Encode(log)

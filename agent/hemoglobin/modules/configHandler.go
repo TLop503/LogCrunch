@@ -19,6 +19,8 @@ var MetaParserRegistry = map[string]structs.ParserModule{
 	},
 }
 
+// HandleConfigTarget determines if each target is using a custom module,
+// and then either initializes the module or pulls from the registry
 func HandleConfigTarget(target structs.Target) (structs.ParserModule, error) {
 	if target.Custom {
 		re, err := regexp.Compile(target.Regex)
@@ -30,7 +32,7 @@ func HandleConfigTarget(target structs.Target) (structs.ParserModule, error) {
 			Schema: target.Schema,
 		}, nil
 	} else {
-		module, ok := MetaParserRegistry[target.Module] // Use target.Module instead of target.Name
+		module, ok := MetaParserRegistry[target.Module]
 		if !ok {
 			return structs.ParserModule{}, fmt.Errorf("no registry entry for module %s", target.Module)
 		}

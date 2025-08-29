@@ -141,5 +141,6 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 		if err != nil {
 			log.Println("Error writing file uncaught by file handler:", err)
 		}
+
 	}
 }

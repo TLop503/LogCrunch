@@ -55,5 +55,13 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		}
 	}
 
+	// Ensure foreign keys are enabled and deferred for this connection
+	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
+		return db, fmt.Errorf("failed to enable foreign keys: %w", err)
+	}
+	if _, err := db.Exec(`PRAGMA defer_foreign_keys = ON;`); err != nil {
+		return db, fmt.Errorf("failed to defer foreign keys: %w", err)
+	}
+
 	return db, nil
 }

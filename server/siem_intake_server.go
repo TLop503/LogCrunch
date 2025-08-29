@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"crypto/tls"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -59,6 +59,10 @@ func main() {
 		log.Fatalf("Error initializing DB: %v", err)
 	}
 	defer db.Close()
+	err = dbmod.PrintAllModules(db)
+	if err != nil {
+		log.Fatalf("Error reading all modules in DB: %v", err)
+	}
 
 	// load modules from mpregistry
 	err = dbmod.LoadModulesFromRegistry(db)
@@ -84,19 +88,18 @@ func main() {
 			continue
 		}
 		connList.AddToConnList(conn)
-		go handleConnection(conn, connList)
+		go handleConnection(conn, connList, db)
 	}
 }
 
 // takes an active connection and a pointer to the list of connections
 // processes incoming logs (currently just writes to file)
 // and updates the connection in the list when it is closed.
-func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
+func handleConnection(conn net.Conn, connList *structs.ConnectionList, db *sql.DB) {
 	defer conn.Close()
-	reader := bufio.NewReader(conn)
+	decoder := json.NewDecoder(conn)
 
 	host, _, err := net.SplitHostPort(conn.RemoteAddr().String())
-
 	if err != nil {
 		fmt.Println("Invalid remote address:", conn.RemoteAddr())
 		return
@@ -106,41 +109,52 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList) {
 	hostname := ""
 
 	for {
-		agentFeedIn, err := reader.ReadString('\n')
-		if err != nil {
-			log.Println("Connection closed:", err)
+		var logEntry structs.Log
+		if err := decoder.Decode(&logEntry); err != nil {
+			if err.Error() == "EOF" {
+				log.Println("Connection closed by remote")
+			} else {
+				log.Println("Failed to decode JSON:", err)
+			}
 			return
 		}
 
+		// Set hostname from the first log if not already set
 		if !hostNameSet {
-			var payload map[string]interface{}
-			if err := json.Unmarshal([]byte(agentFeedIn), &payload); err != nil {
-				log.Println("Invalid JSON when scanning for hostname:", err)
-			} else if val, ok := payload["host"]; ok {
-				if hostStr, ok := val.(string); ok {
-					hostname = hostStr
-					hostNameSet = true
-					fmt.Println("Hostname: ", hostname)
-				}
-			}
+			hostname = logEntry.Host
+			hostNameSet = true
+			fmt.Println("Hostname: ", hostname)
 		}
 
-		// Read connection from list
-		// TODO: is mutex required here? could the connlist get away without one, since each conn has one?
+		// Update tracked connection info for webui
 		connList.RLock()
 		trackedConn, ok := connList.Connections[host]
 		connList.RUnlock()
 		if ok {
 			trackedConn.Lock()
-			trackedConn.LastSeen = time.Now() // this should update after each received log entry.
+			trackedConn.LastSeen = time.Now()
 			trackedConn.Hostname = hostname
 			trackedConn.Unlock()
 		}
 
-		err = filehandler.WriteToFile(filehandler.LOG_INTAKE_DESTINATION, true, true, agentFeedIn)
-		if err != nil {
+		// Write raw JSON line to intake file
+		if err := filehandler.WriteToFile(filehandler.LOG_INTAKE_DESTINATION, true, true, logEntry); err != nil {
 			log.Println("Error writing file uncaught by file handler:", err)
 		}
 
+		logStruct := structs.Log{
+			Name:      logEntry.Name,
+			Path:      logEntry.Path,
+			Host:      logEntry.Host,
+			Timestamp: logEntry.Timestamp,
+			Module:    logEntry.Module,
+			Parsed:    logEntry.Parsed,
+			Raw:       logEntry.Raw,
+		}
+
+		err = dbmod.InsertLog(db, logStruct)
+		if err != nil {
+			log.Fatalf("Error inserting log into DB: %v", err)
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package filehandler
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -8,33 +9,41 @@ import (
 )
 
 // WriteToFile writes a payload to a file, creating or appending based on flags.
-// WriteToFile writes a payload to a file, creating or appending based on flags.
-func WriteToFile(path string, create bool, append bool, payload string) error {
+// payload can be a string or any value that can be marshaled to JSON.
+func WriteToFile(path string, create bool, append bool, payload interface{}) error {
 	var file *os.File
 	var err error
 
+	// Marshal payload to string
+	var line string
+	switch v := payload.(type) {
+	case string:
+		line = v
+	default:
+		data, err := json.Marshal(v)
+		if err != nil {
+			return fmt.Errorf("failed to marshal payload to JSON: %w", err)
+		}
+		line = string(data)
+	}
+
 	// Check if the file exists
 	_, err = os.Stat(path)
-
 	if os.IsNotExist(err) {
 		if create {
-			// Create intermediate directories
 			if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
 				return fmt.Errorf("mkdir err: %v", err)
 			}
-			// Create the file if it doesn't exist and create flag is true
 			file, err = os.Create(path)
 			if err != nil {
 				return fmt.Errorf("error creating file: %w", err)
 			}
 		} else {
-			// Error out if file doesn't exist and create flag is false
 			return fmt.Errorf("file does not exist and create flag is false")
 		}
 	} else if err != nil {
 		return fmt.Errorf("unexpected error checking file existence: %w", err)
 	} else {
-		//open file, and write or append
 		flags := os.O_WRONLY
 		if append {
 			flags |= os.O_APPEND
@@ -43,7 +52,6 @@ func WriteToFile(path string, create bool, append bool, payload string) error {
 		}
 
 		file, err = os.OpenFile(path, flags, 0644)
-
 		if err != nil {
 			return fmt.Errorf("error opening file: %w", err)
 		}
@@ -51,8 +59,8 @@ func WriteToFile(path string, create bool, append bool, payload string) error {
 
 	defer file.Close()
 
-	// Write the payload to the file
-	_, err = file.WriteString(payload + "\n")
+	// Write the payload (JSON string) to the file
+	_, err = file.WriteString(line + "\n")
 	if err != nil {
 		return fmt.Errorf("error writing to file: %w", err)
 	}

@@ -45,3 +45,27 @@ func LoadModulesFromRegistry(db *sql.DB) error {
 	}
 	return nil
 }
+
+// PrintAllModules queries the modules table and prints each module name for debugging
+func PrintAllModules(db *sql.DB) error {
+	rows, err := db.Query(`SELECT module FROM modules`)
+	if err != nil {
+		return fmt.Errorf("failed to query modules table: %w", err)
+	}
+	defer rows.Close()
+
+	fmt.Println("Modules in database:")
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return fmt.Errorf("failed to scan module name: %w", err)
+		}
+		fmt.Println("-", name)
+	}
+
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("rows error: %w", err)
+	}
+
+	return nil
+}

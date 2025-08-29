@@ -15,6 +15,10 @@ var MetaParserRegistry = map[string]ParserModule{
 		Regex:  regexp.MustCompile(`(?P<remote>\S+) (?P<remote_long>\S+) (?P<remote_user>\S+) \[(?P<timestamp>[^\]]+)\] "(?P<request>[^"]*)" (?P<status_code>\d{3}) (?P<size>\S+)`),
 		Schema: ReflectSchema(ApacheLogEntry{}),
 	},
+	"Heartbeat": {
+		Regex:  regexp.MustCompile(`/ \d+ /`),
+		Schema: map[string]string{},
+	},
 }
 
 // ReflectSchema takes a struct instance and returns a map of field name -> type string

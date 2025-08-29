@@ -57,7 +57,7 @@ func TestHandleConfigTarget_RegistrySyslog(t *testing.T) {
 		t.Fatalf("HandleConfigTarget failed: %v", err)
 	}
 
-	registryModule := MetaParserRegistry["syslog"]
+	registryModule := structs.MetaParserRegistry["syslog"]
 
 	if module.Regex.String() != registryModule.Regex.String() {
 		t.Errorf("Expected regex %s, got %s", registryModule.Regex.String(), module.Regex.String())
@@ -81,7 +81,7 @@ func TestHandleConfigTarget_RegistryApache(t *testing.T) {
 		t.Fatalf("HandleConfigTarget failed: %v", err)
 	}
 
-	registryModule := MetaParserRegistry["apache"]
+	registryModule := structs.MetaParserRegistry["apache"]
 
 	if module.Regex.String() != registryModule.Regex.String() {
 		t.Errorf("Expected regex %s, got %s", registryModule.Regex.String(), module.Regex.String())

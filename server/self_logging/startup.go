@@ -22,7 +22,7 @@ func CreateStartLog(host string, port string) string {
 	startLog := structs.Log{
 		Host:      self,
 		Timestamp: time.Now().Unix(),
-		Type:      "LogCrunch Server",
+		Module:    "LogCrunch Server",
 		Raw:       startMessage,
 	}
 

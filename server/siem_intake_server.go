@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	dbmod "github.com/TLop503/LogCrunch/server/db"
 	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/server/self_logging"
 	"github.com/TLop503/LogCrunch/server/web"
@@ -52,8 +53,24 @@ func main() {
 		true,
 	)
 
+	// initialize DB
+	db, err := dbmod.InitDB("/var/log/LogCrunch/logcrunch.db")
+	if err != nil {
+		log.Fatalf("Error initializing DB: %v", err)
+	}
+	defer db.Close()
+
+	// load modules from mpregistry
+	err = dbmod.LoadModulesFromRegistry(db)
+	if err != nil {
+		log.Fatalf("Error loading modules: %v", err)
+	}
+
 	startLog := self_logging.CreateStartLog(host, port)
-	filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
+	err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
+	if err != nil {
+		log.Fatalf("Error initializing firehose: %v", err)
+	}
 
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()

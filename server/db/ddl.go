@@ -3,9 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
+
+	_ "modernc.org/sqlite"
 )
 
-const createSchemasTable = `
+const createModulesTable = `
 CREATE TABLE IF NOT EXISTS modules (
     module_id   INTEGER PRIMARY KEY AUTOINCREMENT,
     module      TEXT NOT NULL UNIQUE,
@@ -41,7 +43,7 @@ func InitDB(dbPath string) (*sql.DB, error) {
 	}
 
 	statements := []string{
-		createSchemasTable,
+		createModulesTable,
 		createLogsTable,
 		createIndexes,
 	}

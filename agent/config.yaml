@@ -5,26 +5,5 @@ Targets:
     severity: low
     custom: false
     module: syslog
-  - name: Fail
-    path: /var/log/faillog
-    severity: high
-    custom: false
-    module: tbd
-  - name: Boot
-    path: /var/log/boot.log
-    severity: info
-    custom: false
-    module: tbd
-  - name: Auth (custom)
-    path: /var/log/auth.log
-    severity: low
-    custom: true
-    regex: '^(?P<timestamp>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<host>\S+)\s+(?P<process>\w+)(?:\[(?P<pid>\d+)\])?:\s+(?P<message>.*)$'
-    schema:
-      timestamp: string
-      host: string
-      process: string
-      pid: int
-      message: string
 
 ...

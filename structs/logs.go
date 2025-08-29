@@ -3,6 +3,7 @@ package structs
 type Log struct {
 	Host      string      `json:"host"`
 	Timestamp int64       `json:"timestamp"`
+	Name      string      `json:"name"`
 	Type      string      `json:"type"`
 	Path      string      `json:"path"`
 	Parsed    interface{} `json:"parsed"`

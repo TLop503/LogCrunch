@@ -2,8 +2,9 @@ package modules
 
 import (
 	"fmt"
-	"github.com/TLop503/LogCrunch/structs"
 	"strconv"
+
+	"github.com/TLop503/LogCrunch/structs"
 )
 
 // MetaParse parses logs into named fields and stages them for transmission

@@ -18,7 +18,7 @@ func Heartbeat(logChan chan<- structs.Log, hostname string) {
 		hb := structs.Log{
 			Host:      hostname,
 			Timestamp: time.Now().Unix(),
-			Type:      "Heartbeat",
+			Module:    "Heartbeat",
 			Path:      "self",
 			Parsed:    seqAsJSON,
 			Raw:       strconv.Itoa(seq),

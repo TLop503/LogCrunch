@@ -28,10 +28,9 @@
             {{else}}<a href="/alias/edit?ip={{ .RemoteAddr }}">Edit</a>
             {{ end }}
         </td>
-        <td>{{ .LastSeen }}</td>
+        <td>{{ formatGoTime .LastSeen }}</td>
     </tr>
     {{ end }}
     {{ end }}
 </table>
-<script src="/static/prettyConnectionTime.js"></script>
 {{ end }}

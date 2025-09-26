@@ -60,7 +60,7 @@ func ReadLog(logChan chan<- structs.Log, target structs.Target) {
 		logEntry := structs.Log{
 			Host:      utils.GetHostName(),
 			Timestamp: time.Now().Unix(),
-			Type:      target.Module,
+			Module:    target.Module,
 			Name:      target.Name,
 			Path:      target.Path,
 			Raw:       line.Text,

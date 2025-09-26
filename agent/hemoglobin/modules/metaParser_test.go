@@ -13,21 +13,21 @@ import (
 func makeSyslogModule() structs.ParserModule {
 	return structs.ParserModule{
 		Regex:  regexp.MustCompile(`^(?P<timestamp>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<host>\S+)\s+(?P<process>\w+)(?:\[(?P<pid>\d+)\])?:\s+(?P<message>.*)$`),
-		Schema: reflectSchema(structs.SyslogEntry{}),
+		Schema: structs.ReflectSchema(structs.SyslogEntry{}),
 	}
 }
 
 func makeApacheModule() structs.ParserModule {
 	return structs.ParserModule{
 		Regex:  regexp.MustCompile(`(?P<remote>\S+) (?P<remote_long>\S+) (?P<remote_user>\S+) \[(?P<timestamp>[^\]]+)\] "(?P<request>[^"]*)" (?P<status_code>\d{3}) (?P<size>\S+)`),
-		Schema: reflectSchema(structs.ApacheLogEntry{}),
+		Schema: structs.ReflectSchema(structs.ApacheLogEntry{}),
 	}
 }
 
 // -- Syslog Tests --
 
 func TestMetaParseSyslog_Registry(t *testing.T) {
-	module := MetaParserRegistry["syslog"]
+	module := structs.MetaParserRegistry["syslog"]
 
 	tests := []struct {
 		name     string
@@ -86,7 +86,7 @@ func TestMetaParseSyslog_Custom(t *testing.T) {
 // -- Apache Tests --
 
 func TestMetaParseApache_Registry(t *testing.T) {
-	module := MetaParserRegistry["apache"]
+	module := structs.MetaParserRegistry["apache"]
 
 	logLine := `127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326`
 

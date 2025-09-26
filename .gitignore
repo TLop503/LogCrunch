@@ -34,5 +34,9 @@ release/*
 # or archives
 *.tar.gz
 
+# or DBs
+*.db
+*.sqlite
+
 # goland config stuff
 .idea/*

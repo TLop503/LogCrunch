@@ -79,7 +79,7 @@ func main() {
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
 	// start web server
-	web.Start(":8080", connList)
+	web.Start(":8080", connList, db)
 
 	for {
 		conn, err := listener.Accept()

@@ -1,14 +1,15 @@
 package web
 
 import (
+	"database/sql"
 	"embed"
+	"github.com/TLop503/LogCrunch/server/db"
+	"github.com/TLop503/LogCrunch/structs"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
-
-	"github.com/TLop503/LogCrunch/server/filehandler"
-	"github.com/TLop503/LogCrunch/structs"
+	"time"
 )
 
 // embed html files in the binary for distribution.
@@ -18,12 +19,28 @@ var templateFS embed.FS
 var templates *template.Template
 
 // Start web server on specified addr (:8080, from main).
-func Start(addr string, connList *structs.ConnectionList) {
+func Start(addr string, connList *structs.ConnectionList, db *sql.DB) {
+
+	// register helper functions
+	funcMap := template.FuncMap{
+		"formatUnix": func(ts int64) string {
+			loc, _ := time.LoadLocation("Local")
+			return time.Unix(ts, 0).In(loc).Format("01-02 15:04:05")
+		},
+		"formatGoTime": func(t time.Time) string {
+			loc, _ := time.LoadLocation("Local")
+			return t.In(loc).Format("2006-01-02 15:04:05")
+		},
+	}
+
+	// register templates
 	var err error
-	templates, err = template.ParseFS(templateFS,
-		"site/templates/*.html",
-		"site/pages/*.html",
-	)
+	templates, err = template.New("").
+		Funcs(funcMap).
+		ParseFS(templateFS,
+			"site/templates/*.html",
+			"site/pages/*.html",
+		)
 	if err != nil {
 		log.Fatalf("error parsing embedded templates: %v", err)
 	}
@@ -34,8 +51,7 @@ func Start(addr string, connList *structs.ConnectionList) {
 	mux.HandleFunc("/connections", serveConnectionsPage(connList))
 	mux.HandleFunc("/alias", handleAliasSet(connList))
 	mux.HandleFunc("/alias/edit", handleAliasEditForm(connList, templates))
-	mux.HandleFunc("/logs", serveLogPage())
-
+	mux.HandleFunc("/logs", serveLogPage(db))
 
 	// Serve static files as subtree of fs
 	staticFS, err := fs.Sub(templateFS, "site/static")
@@ -72,9 +88,9 @@ func serveConnectionsPage(connList *structs.ConnectionList) http.HandlerFunc {
 }
 
 // serveLogPage renders the contents of the intake log file
-func serveLogPage() http.HandlerFunc {
+func serveLogPage(dbase *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := filehandler.LogFileToData()
+		data, err := db.MostRecent50(dbase)
 		if err != nil {
 			http.Error(w, "Failed to parse log intake file", http.StatusInternalServerError)
 			return

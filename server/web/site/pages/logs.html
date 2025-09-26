@@ -2,11 +2,29 @@
 {{ template "html-head" }}
 {{ template "navbar" }}
 <main>
-  <p>Welcome to LogCrunch.</p>
-  <p>Here's where the logs and stuff will go.</p>
-  <!-- Test simple field access -->
-  <h3>Logs:</h3>
-  <pre style="background-color: #f5f5f5; padding: 10px; border: 1px solid #ddd;">{{ .FileContent }}</pre>
+    <p>Welcome to LogCrunch.</p>
+    <p>Here's where the logs and stuff will go.</p>
+    <h3>Logs:</h3>
+    {{ if . }}
+    <table>
+        <tr>
+            <th>Timestamp</th>
+            <th>Rule Name</th>
+            <th>Host</th>
+            <th>Parsed Log</th>
+        </tr>
+        {{ range . }}
+        <tr>
+            <td>{{ formatUnix .Timestamp }}</td>
+            <td>{{ .Name }}</td>
+            <td>{{ .Host }}</td>
+            <td>{{ .Parsed }}</td>
+        </tr>
+        {{ end }}
+    </table>
+    {{ else }}
+    No logs returned by query. Maybe the DB is empty?
+    {{ end }}
 </main>
 {{ template "html-foot" }}
 {{ end }}

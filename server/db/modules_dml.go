@@ -35,7 +35,7 @@ func LoadModulesFromRegistry(db *sql.DB) error {
 		//Marshal to json
 		schemaJson, err := json.Marshal(entry.Schema)
 		if err != nil {
-			return fmt.Errorf("Failed to marshall schema for fodule %s: %w", name, schemaJson)
+			return fmt.Errorf("Failed to marshall schema for fodule %s: %s", name, schemaJson)
 		}
 
 		err = InsertModule(db, DBModule{Name: name, Schema: string(schemaJson)})

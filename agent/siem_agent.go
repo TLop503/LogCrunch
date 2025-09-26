@@ -50,7 +50,7 @@ func main() {
 	// Read log file paths from config file`
 	data, err := os.ReadFile(cfg)
 	if err != nil {
-		fmt.Errorf("Error reading targets file:", err)
+		fmt.Errorf("Error reading targets file: %v", err)
 		return
 	}
 

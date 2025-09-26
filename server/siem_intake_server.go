@@ -84,7 +84,7 @@ func main() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Errorf("Error accepting connection:", err)
+			fmt.Errorf("Error accepting connection: %v", err)
 			continue
 		}
 		connList.AddToConnList(conn)
@@ -123,7 +123,6 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList, db *sql.D
 		if !hostNameSet {
 			hostname = logEntry.Host
 			hostNameSet = true
-			fmt.Println("Hostname: ", hostname)
 		}
 
 		// Update tracked connection info for webui
@@ -138,6 +137,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList, db *sql.D
 		}
 
 		// Write raw JSON line to intake file
+		// Currently kept in for debugging, may be deprecated in future.
 		if err := filehandler.WriteToFile(filehandler.LOG_INTAKE_DESTINATION, true, true, logEntry); err != nil {
 			log.Println("Error writing file uncaught by file handler:", err)
 		}

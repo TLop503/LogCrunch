@@ -39,5 +39,4 @@
 
 .query-form input[type="submit"] {
     flex: 0 0 auto;       /* only as wide as content */
-    padding: 0.4rem 0.8rem;
 }

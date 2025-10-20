@@ -5,13 +5,15 @@
     <p>Welcome to LogCrunch.</p>
     <form action="/query" method="post" class="query-form">
         <label for="query">SQLite Query:</label>
-        <textarea id="query" name="query" rows="3" required></textarea>
+        <textarea id="query" name="query" rows="1" required></textarea>
         <input type="submit" value="Go Crunch!" id="query-submit">
     </form>
 
     <div id="query-container">
         <div id="query-schema">
             {{ template "schema" }}
+            <br><br>
+            <a href="/query">Reset to Default</a>
         </div>
         <div id="query-results">
             {{ if . }}

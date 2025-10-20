@@ -1,0 +1,42 @@
+{{ define "query" }}
+{{ template "html-head" }}
+{{ template "navbar" }}
+<main>
+    <p>Welcome to LogCrunch.</p>
+    <form action="/query" method="post" class="query-form">
+        <label for="query">SQLite Query:</label>
+        <textarea id="query" name="query" rows="3" required></textarea>
+        <input type="submit" value="Go Crunch!" id="query-submit">
+    </form>
+
+    <div id="query-container">
+        <div id="query-schema">
+            {{ template "schema" }}
+        </div>
+        <div id="query-results">
+            {{ if . }}
+            <table>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Rule Name</th>
+                    <th>Host</th>
+                    <th>Parsed Log</th>
+                </tr>
+                {{ range . }}
+                <tr>
+                    <td>{{ formatUnix .Timestamp }}</td>
+                    <td>{{ .Name }}</td>
+                    <td>{{ .Host }}</td>
+                    <td>{{ .Parsed }}</td>
+                </tr>
+                {{ end }}
+            </table>
+            {{ else }}
+            No logs returned by query. Maybe the DB is empty?
+            {{ end }}
+        </div>
+    </div>
+
+</main>
+{{ template "html-foot" }}
+{{ end }}

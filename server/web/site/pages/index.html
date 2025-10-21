@@ -1,14 +1,19 @@
 {{ define "index" }}
-{{ template "html-head" }}
+<html>
+<head>
+    <title>LogCrunch</title>
+    <link rel="stylesheet" type="text/css" href="/static/indexStyles.css" />
+    {{ template "global-head"}}
+</head>
+<body>
+<div class="top-logo">
+    <h1>LogCrunch</h1>
+</div>
 {{ template "navbar" }}
 <main>
-{{ template "index-content" }}
+    <p>Welcome to LogCrunch.</p>
+    <p>Placeholder text and stuff for development.</p>
+    <em>Remember, they can kill you, but the legalities of eating you are much dicier.</em>
 </main>
 {{ template "html-foot" }}
-{{ end }}
-
-{{ define "index-content" }}
-<p>Welcome to LogCrunch.</p>
-<p>Placeholder text and stuff for development.</p>
-<em>Remember, they can kill you, but the legalities of eating you are much dicier.</em>
 {{ end }}

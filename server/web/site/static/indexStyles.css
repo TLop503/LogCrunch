@@ -1,0 +1,18 @@
+body {
+    background: #fffbf6;
+    font-family: monospace;
+    margin: 0;
+}
+
+.top-logo {
+    background-color: blue;
+    color: white;
+    padding-top: 0.5%;
+    padding-bottom: 0.5%;
+    padding-left: 2%;
+    padding-right: 2%;
+}
+
+main {
+    margin: 2%;
+}

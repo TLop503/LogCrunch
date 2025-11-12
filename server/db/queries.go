@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"github.com/TLop503/LogCrunch/structs"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func MostRecent50(db *sql.DB) ([]structs.Log, error) {

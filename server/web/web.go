@@ -19,6 +19,7 @@ var templateFS embed.FS
 var templates *template.Template
 
 // Start web server on specified addr (:8080, from main).
+// Needs RO db passed in
 func Start(addr string, connList *structs.ConnectionList, db *sql.DB) {
 
 	// register helper functions
@@ -51,8 +52,8 @@ func Start(addr string, connList *structs.ConnectionList, db *sql.DB) {
 	mux.HandleFunc("/connections", serveConnectionsPage(connList))
 	mux.HandleFunc("/alias", handleAliasSet(connList))
 	mux.HandleFunc("/alias/edit", handleAliasEditForm(connList, templates))
-	mux.HandleFunc("/logs", serveLogPage(db))
-	mux.HandleFunc("/query", serveQueryPage(db))
+	mux.HandleFunc("/logs", serveLogPage(db))    // Needs to be RO
+	mux.HandleFunc("/query", serveQueryPage(db)) // RO
 
 	// Serve static files as subtree of fs
 	staticFS, err := fs.Sub(templateFS, "site/static")

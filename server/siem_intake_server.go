@@ -59,7 +59,12 @@ func main() {
 		log.Fatalf("Error initializing DB: %v", err)
 	}
 	defer db.Close()
-	err = dbmod.PrintAllModules(db)
+	roDB, err := sql.Open("sqlite3", "file:/var/log/LogCrunch/logcrunch.db?mode=ro&_busy_timeout=5000")
+	if err != nil {
+		log.Fatalf("Error opening read-only DB: %v", err)
+	}
+	defer roDB.Close()
+	err = dbmod.PrintAllModules(roDB)
 	if err != nil {
 		log.Fatalf("Error reading all modules in DB: %v", err)
 	}
@@ -79,7 +84,7 @@ func main() {
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
 	// start web server
-	web.Start(":8080", connList, db)
+	web.Start(":8080", connList, roDB) // use RO db connection!
 
 	for {
 		conn, err := listener.Accept()

@@ -19,6 +19,7 @@ var templateFS embed.FS
 var templates *template.Template
 
 // Start web server on specified addr (:8080, from main).
+// Needs RO db passed in
 func Start(addr string, connList *structs.ConnectionList, db *sql.DB) {
 
 	// register helper functions
@@ -51,7 +52,8 @@ func Start(addr string, connList *structs.ConnectionList, db *sql.DB) {
 	mux.HandleFunc("/connections", serveConnectionsPage(connList))
 	mux.HandleFunc("/alias", handleAliasSet(connList))
 	mux.HandleFunc("/alias/edit", handleAliasEditForm(connList, templates))
-	mux.HandleFunc("/logs", serveLogPage(db))
+	mux.HandleFunc("/logs", serveLogPage(db))    // Needs to be RO
+	mux.HandleFunc("/query", serveQueryPage(db)) // RO
 
 	// Serve static files as subtree of fs
 	staticFS, err := fs.Sub(templateFS, "site/static")
@@ -80,6 +82,49 @@ func serveConnectionsPage(connList *structs.ConnectionList) http.HandlerFunc {
 		connList.RUnlock()
 
 		err := templates.ExecuteTemplate(w, "connections", connections)
+		if err != nil {
+			log.Printf("template error: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}
+}
+
+func serveQueryPage(dbase *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			data []structs.Log
+			err  error
+		)
+
+		switch r.Method {
+		case http.MethodGet:
+			// last 50 by default!
+			data, err = db.MostRecent50(dbase)
+			if err != nil {
+				http.Error(w, "Failed to fetch logs", http.StatusInternalServerError)
+				return
+			}
+
+		case http.MethodPost:
+			// run the user-provided query
+			if err := r.ParseForm(); err != nil {
+				http.Error(w, "Bad form data", http.StatusBadRequest)
+				return
+			}
+			query := r.FormValue("query")
+			data, err = db.RunQuery(dbase, query)
+			if err != nil {
+				http.Error(w, "Query failed", http.StatusInternalServerError)
+				return
+			}
+
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// render template with whatever data we got
+		err = templates.ExecuteTemplate(w, "query", data)
 		if err != nil {
 			log.Printf("template error: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)

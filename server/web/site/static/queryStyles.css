@@ -1,0 +1,42 @@
+#query-container {
+    display: flex;
+    gap: 1rem;           /* space between schema and results */
+    align-items: flex-start;
+}
+
+#query-schema {
+    flex: 0 0 auto;      /* only as wide as its contents */
+    background: #f7f8fa;
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+}
+
+#query-results {
+    flex: 1 1 auto;      /* take the remaining space */
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    overflow-x: auto;
+}
+
+.query-form {
+    display: flex;
+    align-items: flex-start; /* top-align label/textarea/button */
+    gap: 0.5rem;
+}
+
+.query-form label {
+    white-space: nowrap; /* keep label on one line */
+}
+
+.query-form textarea {
+    flex: 1 1 auto;       /* expand to fill available space */
+    resize: vertical;     /* allow user to manually resize height */
+    overflow-wrap: break-word;
+    padding: 0.4rem;
+    font-family: monospace; /* optional for queries */
+}
+
+.query-form input[type="submit"] {
+    flex: 0 0 auto;       /* only as wide as content */
+}

@@ -21,7 +21,11 @@
     {{ range . }}
     <tr>
         <td>{{ .RemoteAddr }}</td>
-        <td>{{ .Hostname }}</td>
+        <td> <!-- populate template then url encode query properly -->
+            <a href="/query?query={{ urlquery (printf "SELECT timestamp, name, host, parsed FROM logs WHERE host = '%s' ORDER BY timestamp DESC LIMIT 100;" .Hostname) }}">
+            {{ .Hostname }}
+            </a>
+        </td>
         <td>
             {{ if .Alias }}
                 <a href="/alias/edit?ip={{ .RemoteAddr }}">{{ .Alias }}</a>

@@ -154,102 +154,6 @@ def compile_server():
     
     return server_output_path
 
-def compile_agent():
-    """Compile the LogCrunch SIEM agent"""
-    print("Compiling SIEM Agent")
-    
-    agent_output_path = os.path.expanduser("~/logcrunch_agent")
-    logcrunch_dir = None
-    # find mod (reuse logic from compile_server)
-    if os.path.exists("./go.mod"):
-        logcrunch_dir = "."
-    elif os.path.exists("../go.mod"):
-        logcrunch_dir = ".."
-    elif os.path.exists("./LogCrunch/go.mod"):
-        logcrunch_dir = "./LogCrunch"
-    else:
-        print("Error: Cannot find LogCrunch go.mod file")
-        print("Current directory:", os.getcwd())
-        print("Looked for go.mod in current directory and parent directories")
-        exit(1)
-    
-    # change to the module directory
-    original_cwd = os.getcwd()
-    os.chdir(logcrunch_dir)
-    
-    try:
-        print(f"Building agent from directory: {os.getcwd()}")
-        
-        # build agent using module-aware compilation
-        print("Building agent...")
-        compilation_result = subprocess.run([
-            "go", "build", "-o", agent_output_path, "./agent"
-        ], capture_output=True, text=True)
-        
-        # dump debug info if compilation failed
-        if compilation_result.returncode != 0:
-            print("Error: Agent compilation failed!")
-            print("Return code:", compilation_result.returncode)
-            print("STDOUT:", compilation_result.stdout)
-            print("STDERR:", compilation_result.stderr)
-            print("Current working directory:", os.getcwd())
-            
-            if os.path.exists("./agent"):
-                print("Agent directory exists, contents:")
-                try:
-                    for item in os.listdir("./agent"):
-                        print(f"  {item}")
-                except Exception as e:
-                    print(f"  Could not list agent directory: {e}")
-            else:
-                print("Error: ./agent directory does not exist!")
-            
-            exit(1)
-    
-    finally:
-        # return to original dir
-        os.chdir(original_cwd)
-    
-    # check if the bin was created
-    if not os.path.isfile(agent_output_path):
-        print(f"Error: Expected agent output file not found at {agent_output_path}")
-        print("Agent compilation appeared to succeed but no output file was created")
-        exit(1)
-    
-    print("Agent built successfully!")
-    subprocess.run(["chmod", "+x", agent_output_path], check=True)
-    
-    return agent_output_path
-
-def setup_agent_config():
-    """Set up agent configuration file"""
-    config_dir = os.path.expanduser("~/logcrunch_config")
-    config_path = os.path.join(config_dir, "agent_config.yaml")
-    
-    print(f"Setting up agent configuration in {config_dir}")
-    os.makedirs(config_dir, exist_ok=True)
-    
-    # create a basic agent config file
-    config_content = """---
-Targets:
-  - name: Auth
-    path: /var/log/auth.log
-    severity: low
-    custom: false
-    module: syslog
-  - name: Syslog
-    path: /var/log/syslog
-    severity: medium
-    custom: false
-    module: syslog
-"""
-    
-    with open(config_path, "w") as f:
-        f.write(config_content)
-    
-    print(f"Agent configuration created at {config_path}")
-    return config_path
-
 def linux(host, cert_path, key_path, port):
 
     # check if we are in repo; if not, clone!
@@ -274,12 +178,7 @@ def linux(host, cert_path, key_path, port):
             print("Error! Go installation failed. Aborting...")
             exit()
     
-    # Compile both server and agent
     server_output_path = compile_server()
-    agent_output_path = compile_agent()
-    
-    # Setup agent configuration
-    agent_config_path = setup_agent_config()
     
     cert_path, key_path = handle_certs(cert_path, key_path)
 
@@ -293,28 +192,9 @@ def linux(host, cert_path, key_path, port):
         systemd()
     """
 
-    # Start the server
-    print(f"Starting SIEM server on {host}:{port}...")
     start_siem_cmd = f"{server_output_path} {host} {port} {cert_path} {key_path}"
     start_siem_cmd = shlex.split(start_siem_cmd)
-    server_process = subprocess.Popen(start_siem_cmd, start_new_session=True)
-    
-    # Wait a moment for server to start
-    print("Waiting for server to start...")
-    import time
-    time.sleep(3)
-    
-    # Start the agent
-    print(f"Starting SIEM agent connecting to {host}:{port}...")
-    start_agent_cmd = f"{agent_output_path} {host} {port} {agent_config_path} n"
-    start_agent_cmd = shlex.split(start_agent_cmd)
-    agent_process = subprocess.Popen(start_agent_cmd, start_new_session=True)
-    
-    print("LogCrunch SIEM server and agent started successfully!")
-    print(f"Server PID: 
-    {print("Note! Certs are not verified when using the wizard, please start agent manually to fix this.")s    start_agent_cmd = f"{agent_output_path} {host} {port} {agent_config_path} n"
-er running on {host}:{port}")
-    print(f"Agent configuration: {agent_config_path}")
+    p = subprocess.Popen(start_siem_cmd, start_new_session=True)
     
     return()
 

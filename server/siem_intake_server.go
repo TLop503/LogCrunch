@@ -25,14 +25,31 @@ func main() {
 	fmt.Println("(____)(_____)\\___/   \\___)(_)\\_)(______)(_)\\_)\\___)(_) (_)")
 
 	if len(os.Args) < 5 {
-		fmt.Println("Usage: <host> <port> <cert path> <key path>")
+		fmt.Println("Usage: <log_host> <log_port> <cert_path> <key_path> [http_host] [http_port]")
+		fmt.Println("  log_host/log_port: Address for TLS log intake")
+		fmt.Println("  cert_path/key_path: TLS certificate and key files")
+		fmt.Println("  http_host/http_port: Address for web interface (optional, defaults to localhost:8080)")
 		return
 	}
 
-	host := os.Args[1]
-	port := os.Args[2]
+	logHost := os.Args[1]
+	logPort := os.Args[2]
 	crt := os.Args[3]
 	key := os.Args[4]
+
+	// Default HTTP server settings
+	httpHost := "localhost"
+	httpPort := "8080"
+
+	// Override HTTP settings if provided
+	if len(os.Args) >= 6 {
+		httpHost = os.Args[5]
+	}
+	if len(os.Args) >= 7 {
+		httpPort = os.Args[6]
+	}
+
+	httpAddr := httpHost + ":" + httpPort
 
 	// Load TLS certificate and key
 	cert, err := tls.LoadX509KeyPair(crt, key)
@@ -40,13 +57,13 @@ func main() {
 		log.Fatalf("Error loading TLS certificate and key: %v", err)
 	}
 	config := &tls.Config{Certificates: []tls.Certificate{cert}}
-	listener, err := tls.Listen("tcp", host+":"+port, config)
+	listener, err := tls.Listen("tcp", logHost+":"+logPort, config)
 	if err != nil {
 		log.Fatalf("Error starting TLS server: %v", err)
 	}
 	defer listener.Close()
 
-	log.Printf("TLS server listening on %s:%s\n", host, port)
+	log.Printf("TLS server listening on %s:%s\n", logHost, logPort)
 	// log starting point
 	filehandler.RotateFile("/var/log/LogCrunch/firehose.log",
 		"/var/log/LogCrunch/old_firehose.log",
@@ -75,7 +92,7 @@ func main() {
 		log.Fatalf("Error loading modules: %v", err)
 	}
 
-	startLog := self_logging.CreateStartLog(host, port)
+	startLog := self_logging.CreateStartLog(logHost, logPort)
 	err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
 	if err != nil {
 		log.Fatalf("Error initializing firehose: %v", err)
@@ -84,7 +101,7 @@ func main() {
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
 	// start web server
-	web.Start(":8080", connList, roDB) // use RO db connection!
+	web.Start(httpAddr, connList, roDB) // use RO db connection!
 
 	for {
 		conn, err := listener.Accept()

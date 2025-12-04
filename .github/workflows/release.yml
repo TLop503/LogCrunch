@@ -1,0 +1,73 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'  # Adjust to your Go version
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Build binaries
+        run: |
+          # Build server for amd64
+          GOOS=linux GOARCH=amd64 go build -o LogCrunch_server ./server
+          tar -czf LogCrunch_server_${{ github.ref_name }}_linux_amd64.tar.gz LogCrunch_server
+          rm LogCrunch_server
+          
+          # Build server for arm64
+          GOOS=linux GOARCH=arm64 go build -o LogCrunch_server ./server
+          tar -czf LogCrunch_server_${{ github.ref_name }}_linux_arm64.tar.gz LogCrunch_server
+          rm LogCrunch_server
+          
+          # Build agent for amd64
+          GOOS=linux GOARCH=amd64 go build -o LogCrunch_agent ./agent
+          tar -czf LogCrunch_agent_${{ github.ref_name }}_linux_amd64.tar.gz LogCrunch_agent
+          rm LogCrunch_agent
+          
+          # Build agent for arm64
+          GOOS=linux GOARCH=arm64 go build -o LogCrunch_agent ./agent
+          tar -czf LogCrunch_agent_${{ github.ref_name }}_linux_arm64.tar.gz LogCrunch_agent
+          rm LogCrunch_agent
+          
+          # Generate checksums
+          sha256sum LogCrunch_*.tar.gz > checksums.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            LogCrunch_*.tar.gz
+            checksums.txt
+
+  release:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+
+      - name: Create Draft Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: |
+            LogCrunch_*.tar.gz
+            checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

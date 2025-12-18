@@ -13,7 +13,7 @@ import (
 	dbmod "github.com/TLop503/LogCrunch/server/db"
 	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/server/self_logging"
-	"github.com/TLop503/LogCrunch/server/web"
+	"github.com/TLop503/LogCrunch/server/webserver"
 	"github.com/TLop503/LogCrunch/structs"
 )
 
@@ -28,7 +28,7 @@ func main() {
 		fmt.Println("Usage: <log_host> <log_port> <cert_path> <key_path> [http_host] [http_port]")
 		fmt.Println("  log_host/log_port: Address for TLS log intake")
 		fmt.Println("  cert_path/key_path: TLS certificate and key files")
-		fmt.Println("  http_host/http_port: Address for web interface (optional, defaults to localhost:8080)")
+		fmt.Println("  http_host/http_port: Address for webserver interface (optional, defaults to localhost:8080)")
 		return
 	}
 
@@ -100,8 +100,8 @@ func main() {
 
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
-	// start web server
-	web.Start(httpAddr, connList, roDB) // use RO db connection!
+	// start webserver server
+	webserver.StartRouter(httpAddr, connList, roDB) // use RO db connection!
 
 	for {
 		conn, err := listener.Accept()

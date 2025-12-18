@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"embed"
 	"github.com/TLop503/LogCrunch/structs"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"html/template"
 	"io/fs"
 	"log"
@@ -13,16 +15,27 @@ import (
 
 // embed html files in the binary for distribution.
 //
-//go:embed site/templates/*.html site/pages/*.html site/static/*
+//go:embed website_content/templates/*.html website_content/pages/*.html website_content/static/*
 var templateFS embed.FS
+
+// templates holds all parsed templates with helper functions
 var templates *template.Template
 
-// StartRouter webserver server on specified addr (:8080, from main).
-// Needs RO db passed in
-func StartRouter(addr string, connList *structs.ConnectionList, db *sql.DB) {
+// initTemplates parses and registers all templates with helper functions
+func initTemplates() error {
+	var err error
+	templates, err = template.New("").
+		Funcs(helperFuncMap()).
+		ParseFS(templateFS,
+			"website_content/templates/*.html",
+			"website_content/pages/*.html",
+		)
+	return err
+}
 
-	// register helper functions
-	funcMap := template.FuncMap{
+// helperFuncMap returns a mapping of helper functions for templates
+func helperFuncMap() template.FuncMap {
+	return template.FuncMap{
 		"formatUnix": func(ts int64) string {
 			loc, _ := time.LoadLocation("Local")
 			return time.Unix(ts, 0).In(loc).Format("01-02 15:04:05")
@@ -32,38 +45,47 @@ func StartRouter(addr string, connList *structs.ConnectionList, db *sql.DB) {
 			return t.In(loc).Format("2006-01-02 15:04:05")
 		},
 	}
+}
 
-	// register templates
-	var err error
-	templates, err = template.New("").
-		Funcs(funcMap).
-		ParseFS(templateFS,
-			"site/templates/*.html",
-			"site/pages/*.html",
-		)
+// setupRoutes configures all application routes
+func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB) {
+	// Middleware
+	r.Use(middleware.Logger)
+
+	// Static content - serve from embedded filesystem
+	staticFS, err := fs.Sub(templateFS, "website_content/static")
 	if err != nil {
+		log.Fatalf("error creating static file system: %v", err)
+	}
+	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
+
+	// Public pages
+	r.Get("/", servePage("index", nil))
+	r.Get("/connections", serveConnectionsPage(connList))
+	r.Get("/logs", serveLogPage(logDb))
+	r.Get("/query", serveQueryPage(logDb))
+
+	// API endpoints
+	// TODO: migrate to /api
+	r.Post("/alias", handleAliasSet(connList))
+	r.Get("/alias/edit", handleAliasEditForm(connList, templates))
+}
+
+// StartRouter starts the webserver on the specified address
+func StartRouter(addr string, connList *structs.ConnectionList, logDb *sql.DB) {
+	// Initialize templates
+	if err := initTemplates(); err != nil {
 		log.Fatalf("error parsing embedded templates: %v", err)
 	}
 
-	// routing!
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", servePage("index", nil))
-	mux.HandleFunc("/connections", serveConnectionsPage(connList))
-	mux.HandleFunc("/alias", handleAliasSet(connList))
-	mux.HandleFunc("/alias/edit", handleAliasEditForm(connList, templates))
-	mux.HandleFunc("/logs", serveLogPage(db))    // Needs to be RO
-	mux.HandleFunc("/query", serveQueryPage(db)) // RO
+	// Setup router
+	r := chi.NewRouter()
+	setupRoutes(r, connList, logDb)
 
-	// Serve static files as subtree of fs
-	staticFS, err := fs.Sub(templateFS, "site/static")
-	if err != nil {
-		log.Fatalf("error creating static filesystem: %v", err)
-	}
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
-
+	// Start server
+	log.Printf("Starting webserver at %s\n", addr)
 	go func() {
-		log.Printf("Webserver running at %s\n", addr)
-		if err := http.ListenAndServe(addr, mux); err != nil {
+		if err := http.ListenAndServe(addr, r); err != nil {
 			log.Fatalf("server error: %v", err)
 		}
 	}()

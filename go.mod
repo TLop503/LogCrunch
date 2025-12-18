@@ -3,6 +3,7 @@ module github.com/TLop503/LogCrunch
 go 1.23.4
 
 require (
+	github.com/go-chi/chi/v5 v5.2.3
 	github.com/hpcloud/tail v1.0.0
 	github.com/mattn/go-sqlite3 v1.14.32
 	gopkg.in/yaml.v3 v3.0.1

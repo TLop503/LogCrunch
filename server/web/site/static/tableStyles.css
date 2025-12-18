@@ -1,7 +1,0 @@
-tr {
-    border: 1px solid black;
-}
-
-tr:nth-child(even) {
-    background-color: #D6EEEE;
-}

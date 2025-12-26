@@ -2,10 +2,11 @@ package webserver
 
 import (
 	"database/sql"
-	"github.com/TLop503/LogCrunch/server/db"
-	"github.com/TLop503/LogCrunch/structs"
 	"log"
 	"net/http"
+
+	logdb "github.com/TLop503/LogCrunch/server/db/logs"
+	"github.com/TLop503/LogCrunch/structs"
 )
 
 // servePage renders the given template with the provided data.
@@ -48,7 +49,7 @@ func serveQueryPage(dbase *sql.DB) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			// last 50 by default!
-			data, err = db.MostRecent50(dbase)
+			data, err = logdb.MostRecent50(dbase)
 			if err != nil {
 				http.Error(w, "Failed to fetch logs", http.StatusInternalServerError)
 				return
@@ -61,7 +62,7 @@ func serveQueryPage(dbase *sql.DB) http.HandlerFunc {
 				return
 			}
 			query := r.FormValue("query")
-			data, err = db.RunQuery(dbase, query)
+			data, err = logdb.RunQuery(dbase, query)
 			if err != nil {
 				http.Error(w, "Query failed", http.StatusInternalServerError)
 				return
@@ -84,7 +85,7 @@ func serveQueryPage(dbase *sql.DB) http.HandlerFunc {
 // serveLogPage renders the contents of the intake log file
 func serveLogPage(dbase *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := db.MostRecent50(dbase)
+		data, err := logdb.MostRecent50(dbase)
 		if err != nil {
 			http.Error(w, "Failed to parse log intake file", http.StatusInternalServerError)
 			return

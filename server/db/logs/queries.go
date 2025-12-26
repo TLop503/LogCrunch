@@ -1,11 +1,13 @@
-package db
+package logs
 
 import (
 	"database/sql"
+
 	"github.com/TLop503/LogCrunch/structs"
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// MostRecent50 returns the 50 most recent log entries
 func MostRecent50(db *sql.DB) ([]structs.Log, error) {
 	stmt := `
 	SELECT timestamp, name, host, parsed
@@ -15,11 +17,10 @@ func MostRecent50(db *sql.DB) ([]structs.Log, error) {
 	`
 
 	rows, err := db.Query(stmt)
-	defer rows.Close()
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	var logs []structs.Log
 	for rows.Next() {
@@ -34,6 +35,7 @@ func MostRecent50(db *sql.DB) ([]structs.Log, error) {
 	return logs, rows.Err()
 }
 
+// RunQuery executes a custom query and returns log entries
 func RunQuery(db *sql.DB, query string) ([]structs.Log, error) {
 	rows, err := db.Query(query)
 	if err != nil {

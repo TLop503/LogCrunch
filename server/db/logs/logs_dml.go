@@ -1,13 +1,14 @@
-package db
+package logs
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+
 	"github.com/TLop503/LogCrunch/structs"
 )
 
-// InsertLog, allowing FKs to not necessarily exist yet
+// InsertLog inserts a single log entry, allowing FKs to not necessarily exist yet
 func InsertLog(db *sql.DB, l structs.Log) error {
 
 	stmt := `
@@ -35,7 +36,7 @@ func InsertLog(db *sql.DB, l structs.Log) error {
 	return err
 }
 
-// insert many logs at a time in batches for high-throughput
+// InsertLogsBatch inserts many logs at a time in batches for high-throughput
 func InsertLogsBatch(db *sql.DB, logs []structs.Log) error {
 	// Begin a transaction
 	tx, err := db.Begin()

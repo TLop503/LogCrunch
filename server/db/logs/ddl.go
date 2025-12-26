@@ -1,10 +1,10 @@
-package db
+package logs
 
 import (
 	"database/sql"
 	"fmt"
 
-	_ "modernc.org/sqlite"
+	"github.com/TLop503/LogCrunch/server/db/core"
 )
 
 const createModulesTable = `
@@ -34,34 +34,24 @@ CREATE INDEX IF NOT EXISTS idx_logs_type ON logs(name);
 CREATE INDEX IF NOT EXISTS idx_logs_host ON logs(host);
 `
 
-// InitDB initializes the SQLite database with tables and indexes.
+const enableForeignKeys = `PRAGMA foreign_keys = ON;`
+const deferForeignKeys = `PRAGMA defer_foreign_keys = ON;`
+
+// logStatements contains all DDL statements needed for the logs database
+var logStatements = []string{
+	createModulesTable,
+	createLogsTable,
+	createIndexes,
+	enableForeignKeys,
+	deferForeignKeys,
+}
+
+// InitLogDB initializes the logs SQLite database with tables and indexes.
 // dbPath is the path to the .sqlite file.
-func InitDB(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", dbPath)
+func InitLogDB(dbPath string) (*sql.DB, error) {
+	db, err := core.InitDB(dbPath, logStatements)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+		return nil, fmt.Errorf("failed to initialize log database: %w", err)
 	}
-
-	statements := []string{
-		createModulesTable,
-		createLogsTable,
-		createIndexes,
-	}
-
-	for _, stmt := range statements {
-		if _, err := db.Exec(stmt); err != nil {
-			db.Close()
-			return nil, fmt.Errorf("failed to execute statement: %w\nstmt: %s", err, stmt)
-		}
-	}
-
-	// Ensure foreign keys are enabled and deferred for this connection
-	if _, err := db.Exec(`PRAGMA foreign_keys = ON;`); err != nil {
-		return db, fmt.Errorf("failed to enable foreign keys: %w", err)
-	}
-	if _, err := db.Exec(`PRAGMA defer_foreign_keys = ON;`); err != nil {
-		return db, fmt.Errorf("failed to defer foreign keys: %w", err)
-	}
-
 	return db, nil
 }

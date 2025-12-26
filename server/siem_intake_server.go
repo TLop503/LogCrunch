@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	dbmod "github.com/TLop503/LogCrunch/server/db"
+	logdb "github.com/TLop503/LogCrunch/server/db/logs"
 	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/server/self_logging"
 	"github.com/TLop503/LogCrunch/server/webserver"
@@ -71,7 +71,7 @@ func main() {
 	)
 
 	// initialize DB
-	db, err := dbmod.InitDB("/var/log/LogCrunch/logcrunch.db")
+	db, err := logdb.InitLogDB("/var/log/LogCrunch/logcrunch.db")
 	if err != nil {
 		log.Fatalf("Error initializing DB: %v", err)
 	}
@@ -81,13 +81,13 @@ func main() {
 		log.Fatalf("Error opening read-only DB: %v", err)
 	}
 	defer roDB.Close()
-	err = dbmod.PrintAllModules(roDB)
+	err = logdb.PrintAllModules(roDB)
 	if err != nil {
 		log.Fatalf("Error reading all modules in DB: %v", err)
 	}
 
 	// load modules from mpregistry
-	err = dbmod.LoadModulesFromRegistry(db)
+	err = logdb.LoadModulesFromRegistry(db)
 	if err != nil {
 		log.Fatalf("Error loading modules: %v", err)
 	}
@@ -174,7 +174,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList, db *sql.D
 			Raw:       logEntry.Raw,
 		}
 
-		err = dbmod.InsertLog(db, logStruct)
+		err = logdb.InsertLog(db, logStruct)
 		if err != nil {
 			log.Fatalf("Error inserting log into DB: %v", err)
 		}

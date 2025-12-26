@@ -29,9 +29,9 @@ func InsertModule(db *sql.DB, m DBModule) error {
 	return err
 }
 
-// LoadModulesFromRegistry adds the contents of the metaparser registry
+// loadModulesFromRegistry adds the contents of the metaparser registry
 // to the database
-func LoadModulesFromRegistry(db *sql.DB) error {
+func loadModulesFromRegistry(db *sql.DB) error {
 	for name, entry := range structs.MetaParserRegistry {
 		// Marshal to json
 		schemaJson, err := json.Marshal(entry.Schema)
@@ -44,11 +44,16 @@ func LoadModulesFromRegistry(db *sql.DB) error {
 			return fmt.Errorf("error inserting module to db: %w", err)
 		}
 	}
+
+	err := printAllModules(db)
+	if err != nil {
+		return fmt.Errorf("error printing all modules: %w", err)
+	}
 	return nil
 }
 
-// PrintAllModules queries the modules table and prints each module name for debugging
-func PrintAllModules(db *sql.DB) error {
+// printAllModules queries the modules table and prints each module name for debugging
+func printAllModules(db *sql.DB) error {
 	rows, err := db.Query(`SELECT module FROM modules`)
 	if err != nil {
 		return fmt.Errorf("failed to query modules table: %w", err)

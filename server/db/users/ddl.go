@@ -53,5 +53,6 @@ func InitUserDB(dbPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize user database: %w", err)
 	}
+
 	return db, nil
 }

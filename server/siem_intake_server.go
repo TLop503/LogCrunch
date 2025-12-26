@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	userauth "github.com/TLop503/LogCrunch/server/user_auth"
 	"log"
 	"net"
 	"os"
@@ -70,28 +71,19 @@ func main() {
 		true,
 	)
 
-	// initialize DB
-	db, err := logdb.InitLogDB("/var/log/LogCrunch/logcrunch.db")
+	// initialize log DBs
+	logDB, roDB, err := logdb.InitLogDB("/var/log/LogCrunch/logcrunch.logDB")
 	if err != nil {
-		log.Fatalf("Error initializing DB: %v", err)
+		log.Fatalf("Error initializing DB connections: %v", err)
 	}
-	defer db.Close()
-	roDB, err := sql.Open("sqlite3", "file:/var/log/LogCrunch/logcrunch.db?mode=ro&_busy_timeout=5000")
-	if err != nil {
-		log.Fatalf("Error opening read-only DB: %v", err)
-	}
+	defer logDB.Close()
 	defer roDB.Close()
-	err = logdb.PrintAllModules(roDB)
-	if err != nil {
-		log.Fatalf("Error reading all modules in DB: %v", err)
-	}
 
-	// load modules from mpregistry
-	err = logdb.LoadModulesFromRegistry(db)
-	if err != nil {
-		log.Fatalf("Error loading modules: %v", err)
-	}
+	// initialize user database. create default user ad hoc
+	userDB, err := userauth.FirstTimeSetupCheck("/opt/LogCrunch/users/accounts.userDB", "/opt/LogCrunch/users/.setupCompleted")
+	defer userDB.Close()
 
+	// TODO: pull out to 1-liner in self_logging
 	startLog := self_logging.CreateStartLog(logHost, logPort)
 	err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
 	if err != nil {
@@ -101,7 +93,7 @@ func main() {
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
 	// start webserver server
-	webserver.StartRouter(httpAddr, connList, roDB) // use RO db connection!
+	webserver.StartRouter(httpAddr, connList, roDB) // use RO logDB connection!
 
 	for {
 		conn, err := listener.Accept()
@@ -110,7 +102,7 @@ func main() {
 			continue
 		}
 		connList.AddToConnList(conn)
-		go handleConnection(conn, connList, db)
+		go handleConnection(conn, connList, logDB)
 	}
 }
 

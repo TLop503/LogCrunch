@@ -48,10 +48,23 @@ var logStatements = []string{
 
 // InitLogDB initializes the logs SQLite database with tables and indexes.
 // dbPath is the path to the .sqlite file.
-func InitLogDB(dbPath string) (*sql.DB, error) {
+func InitLogDB(dbPath string) (*sql.DB, *sql.DB, error) {
 	db, err := core.InitDB(dbPath, logStatements)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize log database: %w", err)
+		return nil, nil, fmt.Errorf("failed to initialize log database: %w", err)
 	}
-	return db, nil
+
+	// load parsing modules from registry to DB
+	err = loadModulesFromRegistry(db)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load modules: %w", err)
+	}
+
+	// create RO connection for queries
+	roDB, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return db, nil, fmt.Errorf("failed to open log database: %w", err)
+	}
+
+	return db, roDB, nil
 }

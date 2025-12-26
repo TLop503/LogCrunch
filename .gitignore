@@ -35,7 +35,8 @@ release/*
 *.tar.gz
 
 # or DBs
-*.db
+*.logDB
+*.userDB
 *.sqlite
 
 # goland config stuff

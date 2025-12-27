@@ -20,7 +20,7 @@ func TestInitLogDB(t *testing.T) {
 	defer os.Remove(dbPath)
 
 	// Initialize the database
-	sqlDB, err := logs.InitLogDB(dbPath)
+	sqlDB, _, err := logs.InitLogDB(dbPath)
 	if err != nil {
 		t.Fatalf("InitLogDB failed: %v", err)
 	}

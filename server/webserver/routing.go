@@ -64,7 +64,14 @@ func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB, us
 	r.Get("/login", serveLoginPage())
 	r.Post("/api/auth/login", handleLogin(userDb))
 
-	// Protected routes (auth required)
+	// Password change routes (auth required but allows password change pending)
+	r.Group(func(r chi.Router) {
+		r.Use(passwordChangeAuthMiddleware(userDb))
+		r.Get("/password-change", servePasswordChangePage())
+		r.Post("/api/auth/password", handlePasswordUpdate(userDb))
+	})
+
+	// Protected routes (auth required, password change must be completed)
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware(userDb))
 
@@ -80,7 +87,6 @@ func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB, us
 
 		// Auth API endpoints (require existing session)
 		r.Post("/api/auth/logout", handleLogout(userDb))
-		r.Post("/api/auth/password", handlePasswordUpdate(userDb))
 		r.Get("/api/auth/check", handleSessionCheck(userDb))
 	})
 }

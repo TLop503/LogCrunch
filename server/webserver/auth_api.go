@@ -77,6 +77,16 @@ func serveLoginPage() http.HandlerFunc {
 	}
 }
 
+// servePasswordChangePage serves the password change page
+func servePasswordChangePage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := templates.ExecuteTemplate(w, "password-change", nil)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}
+}
+
 // authMiddleware checks for valid session and redirects to login if not authenticated
 func authMiddleware(userDb *sql.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -102,7 +112,43 @@ func authMiddleware(userDb *sql.DB) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Session is valid, proceed
+			// Check if user requires password change
+			user, err := users.GetUserByID(userDb, session.UserID)
+			if err != nil || user == nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			if user.RequiresPasswordChange {
+				// Redirect to password change page unless already there
+				http.Redirect(w, r, "/password-change", http.StatusFound)
+				return
+			}
+
+			// Session is valid and no password change required, proceed
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+// passwordChangeAuthMiddleware allows access only if logged in (for password change page)
+func passwordChangeAuthMiddleware(userDb *sql.DB) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cookie, err := r.Cookie(sessionCookieName)
+			if err != nil || cookie.Value == "" {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			clientIP := getClientIP(r)
+			session, err := users.ValidateSession(userDb, cookie.Value, clientIP)
+			if err != nil || session == nil {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			// Session is valid, proceed (don't check password change requirement)
 			next.ServeHTTP(w, r)
 		})
 	}

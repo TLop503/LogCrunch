@@ -7,7 +7,6 @@ toolchain go1.24.11
 require (
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/hpcloud/tail v1.0.0
-	github.com/mattn/go-sqlite3 v1.14.32
 	golang.org/x/crypto v0.46.0
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.38.2

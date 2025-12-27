@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/TLop503/LogCrunch/structs"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 // MostRecent50 returns the 50 most recent log entries

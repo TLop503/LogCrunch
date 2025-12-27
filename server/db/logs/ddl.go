@@ -61,7 +61,7 @@ func InitLogDB(dbPath string) (*sql.DB, *sql.DB, error) {
 	}
 
 	// create RO connection for queries
-	roDB, err := sql.Open("sqlite3", dbPath)
+	roDB, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return db, nil, fmt.Errorf("failed to open log database: %w", err)
 	}

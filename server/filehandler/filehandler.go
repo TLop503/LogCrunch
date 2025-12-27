@@ -39,20 +39,20 @@ func WriteToFile(path string, create bool, append bool, payload interface{}) err
 		}
 	} else if err != nil {
 		return fmt.Errorf("unexpected error checking file existence: %w", err)
-	} else {
-		flags := os.O_WRONLY
-		if append {
-			flags |= os.O_APPEND
-		} else {
-			flags |= os.O_TRUNC
-		}
-
-		file, err = os.OpenFile(path, flags, 0644)
-		if err != nil {
-			return fmt.Errorf("error opening file: %w", err)
-		}
 	}
 
+	// Open the file for writing (after ensuring it exists)
+	flags := os.O_WRONLY
+	if append {
+		flags |= os.O_APPEND
+	} else {
+		flags |= os.O_TRUNC
+	}
+
+	file, err = os.OpenFile(path, flags, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening file: %w", err)
+	}
 	defer file.Close()
 
 	// Write the payload (JSON string) to the file

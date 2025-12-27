@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	userauth "github.com/TLop503/LogCrunch/server/user_auth"
 	"log"
 	"net"
 	"os"
 	"time"
+
+	userauth "github.com/TLop503/LogCrunch/server/user_auth"
 
 	logdb "github.com/TLop503/LogCrunch/server/db/logs"
 	"github.com/TLop503/LogCrunch/server/filehandler"
@@ -93,7 +94,7 @@ func main() {
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
 	// start webserver server
-	webserver.StartRouter(httpAddr, connList, roDB) // use RO logDB connection!
+	webserver.StartRouter(httpAddr, connList, roDB, userDB) // use RO logDB connection!
 
 	for {
 		conn, err := listener.Accept()

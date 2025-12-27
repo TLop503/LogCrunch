@@ -3,14 +3,15 @@ package webserver
 import (
 	"database/sql"
 	"embed"
-	"github.com/TLop503/LogCrunch/structs"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/TLop503/LogCrunch/structs"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 // embed html files in the binary for distribution.
@@ -48,7 +49,7 @@ func helperFuncMap() template.FuncMap {
 }
 
 // setupRoutes configures all application routes
-func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB) {
+func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB, userDb *sql.DB) {
 	// Middleware
 	r.Use(middleware.Logger)
 
@@ -69,10 +70,16 @@ func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB) {
 	// TODO: migrate to /api
 	r.Post("/alias", handleAliasSet(connList))
 	r.Get("/alias/edit", handleAliasEditForm(connList, templates))
+
+	// Auth API endpoints
+	r.Post("/api/auth/login", handleLogin(userDb))
+	r.Post("/api/auth/logout", handleLogout(userDb))
+	r.Post("/api/auth/password", handlePasswordUpdate(userDb))
+	r.Get("/api/auth/check", handleSessionCheck(userDb))
 }
 
 // StartRouter starts the webserver on the specified address
-func StartRouter(addr string, connList *structs.ConnectionList, logDb *sql.DB) {
+func StartRouter(addr string, connList *structs.ConnectionList, logDb *sql.DB, userDb *sql.DB) {
 	// Initialize templates
 	if err := initTemplates(); err != nil {
 		log.Fatalf("error parsing embedded templates: %v", err)
@@ -80,7 +87,7 @@ func StartRouter(addr string, connList *structs.ConnectionList, logDb *sql.DB) {
 
 	// Setup router
 	r := chi.NewRouter()
-	setupRoutes(r, connList, logDb)
+	setupRoutes(r, connList, logDb, userDb)
 
 	// Start server
 	log.Printf("Starting webserver at %s\n", addr)

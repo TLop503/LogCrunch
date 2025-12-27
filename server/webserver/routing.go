@@ -60,22 +60,29 @@ func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB, us
 	}
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
-	// Public pages
-	r.Get("/", servePage("index", nil))
-	r.Get("/connections", serveConnectionsPage(connList))
-	r.Get("/logs", serveLogPage(logDb))
-	r.Get("/query", serveQueryPage(logDb))
-
-	// API endpoints
-	// TODO: migrate to /api
-	r.Post("/alias", handleAliasSet(connList))
-	r.Get("/alias/edit", handleAliasEditForm(connList, templates))
-
-	// Auth API endpoints
+	// Public routes (no auth required)
+	r.Get("/login", serveLoginPage())
 	r.Post("/api/auth/login", handleLogin(userDb))
-	r.Post("/api/auth/logout", handleLogout(userDb))
-	r.Post("/api/auth/password", handlePasswordUpdate(userDb))
-	r.Get("/api/auth/check", handleSessionCheck(userDb))
+
+	// Protected routes (auth required)
+	r.Group(func(r chi.Router) {
+		r.Use(authMiddleware(userDb))
+
+		// Pages
+		r.Get("/", servePage("index", nil))
+		r.Get("/connections", serveConnectionsPage(connList))
+		r.Get("/logs", serveLogPage(logDb))
+		r.Get("/query", serveQueryPage(logDb))
+
+		// API endpoints
+		r.Post("/alias", handleAliasSet(connList))
+		r.Get("/alias/edit", handleAliasEditForm(connList, templates))
+
+		// Auth API endpoints (require existing session)
+		r.Post("/api/auth/logout", handleLogout(userDb))
+		r.Post("/api/auth/password", handlePasswordUpdate(userDb))
+		r.Get("/api/auth/check", handleSessionCheck(userDb))
+	})
 }
 
 // StartRouter starts the webserver on the specified address

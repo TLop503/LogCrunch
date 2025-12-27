@@ -67,6 +67,47 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 	json.NewEncoder(w).Encode(data)
 }
 
+// serveLoginPage serves the login page
+func serveLoginPage() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := templates.ExecuteTemplate(w, "login", nil)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}
+}
+
+// authMiddleware checks for valid session and redirects to login if not authenticated
+func authMiddleware(userDb *sql.DB) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			cookie, err := r.Cookie(sessionCookieName)
+			if err != nil || cookie.Value == "" {
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			clientIP := getClientIP(r)
+			session, err := users.ValidateSession(userDb, cookie.Value, clientIP)
+			if err != nil || session == nil {
+				// Clear invalid cookie
+				http.SetCookie(w, &http.Cookie{
+					Name:     sessionCookieName,
+					Value:    "",
+					Path:     "/",
+					HttpOnly: true,
+					MaxAge:   -1,
+				})
+				http.Redirect(w, r, "/login", http.StatusFound)
+				return
+			}
+
+			// Session is valid, proceed
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // handleLogin handles POST /api/auth/login
 func handleLogin(userDB *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

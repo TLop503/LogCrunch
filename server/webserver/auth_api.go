@@ -3,37 +3,11 @@ package webserver
 import (
 	"database/sql"
 	"encoding/json"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/TLop503/LogCrunch/server/db/users"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"strings"
 )
-
-const (
-	sessionCookieName = "logcrunch_session"
-	sessionDuration   = 2 * time.Hour
-)
-
-// LoginRequest represents the JSON body for login
-type LoginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-// PasswordUpdateRequest represents the JSON body for password update
-type PasswordUpdateRequest struct {
-	CurrentPassword string `json:"current_password"`
-	NewPassword     string `json:"new_password"`
-}
-
-// APIResponse is a generic JSON response
-type APIResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message,omitempty"`
-	Error   string `json:"error,omitempty"`
-}
 
 // getClientIP extracts the client IP from the request
 func getClientIP(r *http.Request) string {

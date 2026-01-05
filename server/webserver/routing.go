@@ -11,7 +11,6 @@ import (
 
 	"github.com/TLop503/LogCrunch/structs"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 // embed html files in the binary for distribution.
@@ -51,7 +50,7 @@ func helperFuncMap() template.FuncMap {
 // setupRoutes configures all application routes
 func setupRoutes(r *chi.Mux, connList *structs.ConnectionList, logDb *sql.DB, userDb *sql.DB) {
 	// Middleware
-	r.Use(middleware.Logger)
+	// r.Use(middleware.Logger) // uncomment for debugging
 
 	// Static content - serve from embedded filesystem
 	staticFS, err := fs.Sub(templateFS, "website_content/static")

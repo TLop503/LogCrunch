@@ -1,14 +1,15 @@
-package db
+package logs
 
 import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/TLop503/LogCrunch/structs"
 	"time"
+
+	"github.com/TLop503/LogCrunch/structs"
 )
 
-// Module represents a parser module and its schema
+// DBModule represents a parser module and its schema
 type DBModule struct {
 	Name   string
 	Schema string // JSON string
@@ -28,26 +29,31 @@ func InsertModule(db *sql.DB, m DBModule) error {
 	return err
 }
 
-// LoadModulesFromRegistry adds the contents of the metaparser reg
+// loadModulesFromRegistry adds the contents of the metaparser registry
 // to the database
-func LoadModulesFromRegistry(db *sql.DB) error {
+func loadModulesFromRegistry(db *sql.DB) error {
 	for name, entry := range structs.MetaParserRegistry {
-		//Marshal to json
+		// Marshal to json
 		schemaJson, err := json.Marshal(entry.Schema)
 		if err != nil {
-			return fmt.Errorf("Failed to marshall schema for fodule %s: %s", name, schemaJson)
+			return fmt.Errorf("failed to marshal schema for module %s: %s", name, schemaJson)
 		}
 
 		err = InsertModule(db, DBModule{Name: name, Schema: string(schemaJson)})
 		if err != nil {
-			return fmt.Errorf("Error inserting module to db: %w", err)
+			return fmt.Errorf("error inserting module to db: %w", err)
 		}
+	}
+
+	err := printAllModules(db)
+	if err != nil {
+		return fmt.Errorf("error printing all modules: %w", err)
 	}
 	return nil
 }
 
-// PrintAllModules queries the modules table and prints each module name for debugging
-func PrintAllModules(db *sql.DB) error {
+// printAllModules queries the modules table and prints each module name for debugging
+func printAllModules(db *sql.DB) error {
 	rows, err := db.Query(`SELECT module FROM modules`)
 	if err != nil {
 		return fmt.Errorf("failed to query modules table: %w", err)

@@ -1,15 +1,15 @@
-package db_test
+package logs_test
 
 import (
 	"database/sql"
 	"os"
 	"testing"
 
-	"github.com/TLop503/LogCrunch/server/db"
+	"github.com/TLop503/LogCrunch/server/db/logs"
 	_ "modernc.org/sqlite"
 )
 
-func TestInitDB(t *testing.T) {
+func TestInitLogDB(t *testing.T) {
 	// Create a temporary file for the SQLite database
 	tmpFile, err := os.CreateTemp("", "test_logcrunch_*.sqlite")
 	if err != nil {
@@ -20,9 +20,9 @@ func TestInitDB(t *testing.T) {
 	defer os.Remove(dbPath)
 
 	// Initialize the database
-	sqlDB, err := db.InitDB(dbPath)
+	sqlDB, _, err := logs.InitLogDB(dbPath)
 	if err != nil {
-		t.Fatalf("InitDB failed: %v", err)
+		t.Fatalf("InitLogDB failed: %v", err)
 	}
 	defer sqlDB.Close()
 

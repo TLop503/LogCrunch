@@ -1,0 +1,30 @@
+{{ define "logs" }}
+{{ template "html-head" }}
+{{ template "navbar" }}
+<main>
+    <p>Welcome to LogCrunch.</p>
+    <!--<p>Here's where the logs and stuff will go.</p>-->
+    <h3>Logs (50 Most Recent):</h3>
+    {{ if . }}
+    <table>
+        <tr>
+            <th>Timestamp</th>
+            <th>Rule Name</th>
+            <th>Host</th>
+            <th>Parsed Log</th>
+        </tr>
+        {{ range . }}
+        <tr>
+            <td>{{ formatUnix .Timestamp }}</td>
+            <td>{{ .Name }}</td>
+            <td>{{ .Host }}</td>
+            <td>{{ .Parsed }}</td>
+        </tr>
+        {{ end }}
+    </table>
+    {{ else }}
+    No logs returned by query. Maybe the DB is empty?
+    {{ end }}
+</main>
+{{ template "html-foot" }}
+{{ end }}

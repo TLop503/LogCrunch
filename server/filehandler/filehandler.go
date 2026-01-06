@@ -31,32 +31,28 @@ func WriteToFile(path string, create bool, append bool, payload interface{}) err
 	_, err = os.Stat(path)
 	if os.IsNotExist(err) {
 		if create {
-			if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-				return fmt.Errorf("mkdir err: %v", err)
-			}
-			file, err = os.Create(path)
-			if err != nil {
-				return fmt.Errorf("error creating file: %w", err)
+			if err = Create_if_needed(path, os.ModePerm, os.ModePerm); err != nil {
+				return fmt.Errorf("file/path creation error: %v", err)
 			}
 		} else {
 			return fmt.Errorf("file does not exist and create flag is false")
 		}
 	} else if err != nil {
 		return fmt.Errorf("unexpected error checking file existence: %w", err)
-	} else {
-		flags := os.O_WRONLY
-		if append {
-			flags |= os.O_APPEND
-		} else {
-			flags |= os.O_TRUNC
-		}
-
-		file, err = os.OpenFile(path, flags, 0644)
-		if err != nil {
-			return fmt.Errorf("error opening file: %w", err)
-		}
 	}
 
+	// Open the file for writing (after ensuring it exists)
+	flags := os.O_WRONLY
+	if append {
+		flags |= os.O_APPEND
+	} else {
+		flags |= os.O_TRUNC
+	}
+
+	file, err = os.OpenFile(path, flags, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening file: %w", err)
+	}
 	defer file.Close()
 
 	// Write the payload (JSON string) to the file
@@ -93,5 +89,28 @@ func RotateFile(filePath string, rotationDestination string, append bool) error 
 		return fmt.Errorf("func WriteToFile error from RotateFile: %w", err)
 	}
 
+	return nil
+}
+
+// Create_if_needed creates an empty file at a given path to aid in DB or filehandler operations
+func Create_if_needed(path string, dirPerm os.FileMode, filePerm os.FileMode) error {
+	// Ensure parent directory exists
+	dir := filepath.Dir(path)
+	if dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("failed to create directory: %w", err)
+		}
+	}
+
+	// Ensure DB file exists
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, filePerm)
+		if err != nil {
+			return fmt.Errorf("failed to create file: %w", err)
+		}
+		f.Close()
+	} else if err != nil {
+		return fmt.Errorf("failed to stat file: %w", err)
+	}
 	return nil
 }

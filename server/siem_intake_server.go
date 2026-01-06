@@ -10,10 +10,12 @@ import (
 	"os"
 	"time"
 
-	dbmod "github.com/TLop503/LogCrunch/server/db"
+	userauth "github.com/TLop503/LogCrunch/server/user_auth"
+
+	logdb "github.com/TLop503/LogCrunch/server/db/logs"
 	"github.com/TLop503/LogCrunch/server/filehandler"
 	"github.com/TLop503/LogCrunch/server/self_logging"
-	"github.com/TLop503/LogCrunch/server/web"
+	"github.com/TLop503/LogCrunch/server/webserver"
 	"github.com/TLop503/LogCrunch/structs"
 )
 
@@ -28,7 +30,7 @@ func main() {
 		fmt.Println("Usage: <log_host> <log_port> <cert_path> <key_path> [http_host] [http_port]")
 		fmt.Println("  log_host/log_port: Address for TLS log intake")
 		fmt.Println("  cert_path/key_path: TLS certificate and key files")
-		fmt.Println("  http_host/http_port: Address for web interface (optional, defaults to localhost:8080)")
+		fmt.Println("  http_host/http_port: Address for webserver interface (optional, defaults to localhost:8080)")
 		return
 	}
 
@@ -70,28 +72,19 @@ func main() {
 		true,
 	)
 
-	// initialize DB
-	db, err := dbmod.InitDB("/var/log/LogCrunch/logcrunch.db")
+	// initialize log DBs
+	logDB, roDB, err := logdb.InitLogDB("/var/log/LogCrunch/logcrunch.logDB")
 	if err != nil {
-		log.Fatalf("Error initializing DB: %v", err)
+		log.Fatalf("Error initializing DB connections: %v", err)
 	}
-	defer db.Close()
-	roDB, err := sql.Open("sqlite3", "file:/var/log/LogCrunch/logcrunch.db?mode=ro&_busy_timeout=5000")
-	if err != nil {
-		log.Fatalf("Error opening read-only DB: %v", err)
-	}
+	defer logDB.Close()
 	defer roDB.Close()
-	err = dbmod.PrintAllModules(roDB)
-	if err != nil {
-		log.Fatalf("Error reading all modules in DB: %v", err)
-	}
 
-	// load modules from mpregistry
-	err = dbmod.LoadModulesFromRegistry(db)
-	if err != nil {
-		log.Fatalf("Error loading modules: %v", err)
-	}
+	// initialize user database. create default user ad hoc
+	userDB, err := userauth.FirstTimeSetupCheck("/opt/LogCrunch/users/accounts.userDB", "/opt/LogCrunch/users/.setupCompleted")
+	defer userDB.Close()
 
+	// TODO: pull out to 1-liner in self_logging
 	startLog := self_logging.CreateStartLog(logHost, logPort)
 	err = filehandler.WriteToFile("/var/log/LogCrunch/firehose.log", true, false, startLog)
 	if err != nil {
@@ -100,8 +93,8 @@ func main() {
 
 	// accept incoming transmissions indefinitely until we are killed
 	connList := structs.NewConnList()
-	// start web server
-	web.Start(httpAddr, connList, roDB) // use RO db connection!
+	// start webserver server
+	webserver.StartRouter(httpAddr, connList, roDB, userDB) // use RO logDB connection!
 
 	for {
 		conn, err := listener.Accept()
@@ -110,7 +103,7 @@ func main() {
 			continue
 		}
 		connList.AddToConnList(conn)
-		go handleConnection(conn, connList, db)
+		go handleConnection(conn, connList, logDB)
 	}
 }
 
@@ -174,7 +167,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList, db *sql.D
 			Raw:       logEntry.Raw,
 		}
 
-		err = dbmod.InsertLog(db, logStruct)
+		err = logdb.InsertLog(db, logStruct)
 		if err != nil {
 			log.Fatalf("Error inserting log into DB: %v", err)
 		}

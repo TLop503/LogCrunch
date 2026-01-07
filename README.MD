@@ -1,29 +1,32 @@
-# Heartbeat0 is now LogCrunch
-*A WIP SIEM for CDC Competitions. Name subject to change again :)*
+# LogCrunch - Logs from Everywhere, Anywhere.
 
-This SIEM (though currently only a log aggregator) works by reading and parsing a user-defined list of log files and sending them over the wire to a single stash. This project aims to undercut existing SIEMs in computational strength needed to run on even the weakest of endpoints. At this stage in development the prebuilt binaries will run on most modern linux with minimal resources. Support for other OSs are in development.
+LogCrunch is a proto-SIEM that aggregates logs by parsing user-defined targets and schemas at runtime to ingest logs. These are then sent to a centralized stash where they can be queried and investigated. LogCrunch's primary goal is to undercut the expected computational requirements for a SIEM to minimalize resource usage, focusing on Collegiate Cyber Defense Competitions and homelabs. 
+
+LogCrunch is built for UNIX systems, but support for Windows is planned for future releases.
 
 ## Notes
-This is a WIP project for my honors undergrad thesis. Issues, etc. are welcome but since this is tied to my graduation status I may not be able to accept collaboration/PRs at this point in time.
+LogCrunch is a student project for my Honor's Undergrad thesis. Issues and PRs are welcome, but please ask before attempting any major contributions, as they may need to wait until after my thesis defense. Feel free to reach out via GitHub issues or email me directly at tlop \[at] tlop \[dot] xyz. RFC 1149-compliant addresses available upon request.
 
-# How to run
-There are a few ways to run this project. You can download the latest [release](https://github.com/TLop503/LogCrunch/releases) or clone the project to manually set up the server and agents. Or, you can use the setup [script](https://github.com/TLop503/LogCrunch/blob/main/scripts/server_setup.py) to automatically install the server, but will still need to manually deploy agents. Agent deployment scripts are coming soon!
+## Installation
+### Server (Must be Done First)
+1. Download and extract the latest [release](https://github.com/TLop503/LogCrunch/releases) for your architecture.
+2. Generate or otehrwise configure TLS certificates. Note the path of the `key` and `crt`.
+3. Choose if you want to run the server as `root` or under a dedicated user
+   1. Users will need access to read + write to `/var/log/LogCrunch/*` and `/opt/LogCrunch/`. 
+5. Start the intake server, specifying each argument. Running the intake w/o arguments will list the up-to-date required parameters. You'll need to pass in the paths to your cryptography, where to listen for logs, and where to serve the WebUI. 
+   1. Note you may need to update your firewall to allow LogCrunch to receive data from the network. 
+6. On the first startup, a (randomized) default password for the WebUI is printed to `stdout`. Upon first sign in to the WebUI, you will need to update this to something unique before you can access the query interface. There are no hardcoded password requirements, use your best judgement for your environment.
+   7. If you are locked out or otherwise unable to log in, you'll need to delete the `/opt/LogCrunch/users` directory and restart the server.
+### Agent(s)
+1. Download and extract the latest [release](https://github.com/TLop503/LogCrunch/releases) for your architecture.
+2. Write a `targets.yaml` configuration file, specifying logs to read and how to parse them. An example can be found in [Github](https://github.com/TLop503/LogCrunch/blob/main/agent/custom_cfg.yaml). Some parsing schemas are built-in as well, these can be found in the [MetaParser Registry](https://github.com/TLop503/LogCrunch/blob/ec750e335f0ab9f7d891e14750a5a5c1ea80b563/structs/meta_parser_regisry.go#L9). 
+3. Start the agent, specifying arguments for the IP of the SIEM server, intake port, config path, and whether to verify the TLS certificates. 
 
-## Setup
-1. Download the tarball and extract it, or clone the repo
-   1. If you are building from source you'll need golang installed. Compile w/ `go build ./server; go build ./agent`
-1. If desired, edit the target file to add or remove log locations you'd like to watch.
-1. Generate some TLS certs!
-   1. `openssl req -x509 -newkey rsa:4096 -keyout path_to_server.key -out path_to_server.crt -days 365 -nodes -subj "/CN=localhost"`
-1. Start the intake server as root, specifying:
-   1. Host (0.0.0.0 to recieve from the network)
-   1. Port
-      1. Note! you will need to open this port on your firewall if you intend to recieve logs over the network
-   1. The path to the .crt
-   1. The path to the .key
-1. Start the agent, specifying:
-   1. Host (IP of the box with the server)
-   1. Port
-   1. The path to a target.yaml (see agent/target.yaml for example)
-   1. Whether to verify the TLS certs being used (y/n)
-1. Logs will appear in `/var/log/LogCrunch/firehose.log` on the box running the intake server. The webui will appear at :8080.
+### Automated Server Deployment, Dockerfiles, Etc.
+Scripted installation methods are hosted in the [utility repo](https://github.com/TLop503/LogCrunch-Utils).
+
+## Building from Source
+1. Install GoLang
+2. Clone the repository
+3. `cd LogCrunch`
+4. Compile with: `go build -o LogCrunch-Server ./server; go build -o LogCrunch-agent ./agent`

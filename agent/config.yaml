@@ -5,6 +5,8 @@ Targets:
     severity: low
     custom: false
     module: syslog
-
-
+Services:
+  - name: JournalDemo
+    key: journal-demo
+    severity: low
 ...

@@ -86,8 +86,8 @@ func serveQueryPage(dbase *sql.DB) http.HandlerFunc {
 func serveLogPage(dbase *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := logdb.MostRecent50(dbase)
-		err_msg := "Failed to parse log intake file: " + err.Error()
 		if err != nil {
+			err_msg := "Failed to parse log intake file: " + err.Error()
 			http.Error(w, err_msg, http.StatusInternalServerError)
 			return
 		}

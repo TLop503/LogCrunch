@@ -35,7 +35,6 @@ CREATE INDEX IF NOT EXISTS idx_logs_host ON logs(host);
 `
 
 const enableForeignKeys = `PRAGMA foreign_keys = ON;`
-const deferForeignKeys = `PRAGMA defer_foreign_keys = ON;`
 
 // logStatements contains all DDL statements needed for the logs database
 var logStatements = []string{
@@ -43,7 +42,6 @@ var logStatements = []string{
 	createLogsTable,
 	createIndexes,
 	enableForeignKeys,
-	deferForeignKeys,
 }
 
 // InitLogDB initializes the logs SQLite database with tables and indexes.
@@ -65,6 +63,6 @@ func InitLogDB(dbPath string) (*sql.DB, *sql.DB, error) {
 	if err != nil {
 		return db, nil, fmt.Errorf("failed to open log database: %w", err)
 	}
-
+	
 	return db, roDB, nil
 }

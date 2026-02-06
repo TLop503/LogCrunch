@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/TLop503/LogCrunch/agent/hemoglobin/modules"
 	"github.com/TLop503/LogCrunch/structs"
 	"gopkg.in/yaml.v3"
 	"log"
@@ -73,7 +74,7 @@ func main() {
 	// listen to systemd log api
 	log.Println("Loaded Systemd Services:", yamlConfig.Services)
 	log.Println("Starting to spawn systemd listener")
-	// attach!!
+	modules.ListenToSystemd(logChan, yamlConfig.Services)
 
 	// TODO: Add graceful shutdowns
 	select {}

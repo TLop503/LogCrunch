@@ -2,11 +2,12 @@ package modules
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/TLop503/LogCrunch/agent/utils"
 	"github.com/TLop503/LogCrunch/structs"
 	"github.com/coreos/go-systemd/v22/sdjournal"
-	"log"
-	"time"
 )
 
 // StartJour creates a new systemd journal reader
@@ -59,7 +60,7 @@ func ListenToSystemd(logChan chan<- structs.Log, services []structs.Service) {
 			Name:      entry.Fields["SYSLOG_IDENTIFIER"],
 			Path:      "systemd",
 			Raw:       entry.Fields["MESSAGE"],
-			Parsed:    "",
+			Parsed:    entry.Fields["MESSAGE"],
 		}
 		logChan <- logEntry
 	}

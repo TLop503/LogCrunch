@@ -2,7 +2,6 @@ package logs
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 
 	"github.com/TLop503/LogCrunch/structs"

@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -15,7 +16,15 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'  # Adjust to your Go version
+          go-version: '1.21'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libsystemd-dev \
+            build-essential \
+            pkg-config
 
       - name: Install systemd development headers
         run: |
@@ -23,30 +32,25 @@ jobs:
           sudo apt-get install -y libsystemd-dev
 
       - name: Run tests
-        run: go test ./...
-
-      - name: Build binaries
         run: |
-          # Build server for amd64
-          GOOS=linux GOARCH=amd64 go build -o LogCrunch_server ./server
+          CGO_ENABLED=1 go test ./...
+
+      - name: Build binaries (linux/amd64)
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          # Build server
+          go build -o LogCrunch_server ./server
           tar -czf LogCrunch_server_${{ github.ref_name }}_linux_amd64.tar.gz LogCrunch_server
           rm LogCrunch_server
-          
-          # Build server for arm64
-          GOOS=linux GOARCH=arm64 go build -o LogCrunch_server ./server
-          tar -czf LogCrunch_server_${{ github.ref_name }}_linux_arm64.tar.gz LogCrunch_server
-          rm LogCrunch_server
-          
-          # Build agent for amd64
-          GOOS=linux GOARCH=amd64 go build -o LogCrunch_agent ./agent
+
+          # Build agent
+          go build -o LogCrunch_agent ./agent
           tar -czf LogCrunch_agent_${{ github.ref_name }}_linux_amd64.tar.gz LogCrunch_agent
           rm LogCrunch_agent
-          
-          # Build agent for arm64
-          GOOS=linux GOARCH=arm64 go build -o LogCrunch_agent ./agent
-          tar -czf LogCrunch_agent_${{ github.ref_name }}_linux_arm64.tar.gz LogCrunch_agent
-          rm LogCrunch_agent
-          
+
           # Generate checksums
           sha256sum LogCrunch_*.tar.gz > checksums.txt
 
@@ -61,6 +65,7 @@ jobs:
   release:
     needs: build-and-test
     runs-on: ubuntu-latest
+
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4

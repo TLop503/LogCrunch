@@ -12,13 +12,15 @@
             <th>Rule Name</th>
             <th>Host</th>
             <th>Parsed Log</th>
+            <th>Raw</th>
         </tr>
         {{ range . }}
         <tr>
             <td>{{ formatUnix .Timestamp }}</td>
             <td>{{ .Name }}</td>
             <td>{{ .Host }}</td>
-            <td>{{ .Parsed }}</td>
+            <td>{{ toJSON .Parsed }}</td>
+            <td>{{ .Raw }}</td>
         </tr>
         {{ end }}
     </table>

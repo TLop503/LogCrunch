@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/TLop503/LogCrunch/agent/hemoglobin/modules"
 	"github.com/TLop503/LogCrunch/structs"
 	"gopkg.in/yaml.v3"
 	"log"
@@ -50,18 +51,18 @@ func main() {
 	// Read log file paths from config file`
 	data, err := os.ReadFile(cfg)
 	if err != nil {
-		fmt.Errorf("Error reading targets file: %v", err)
+		fmt.Errorf("Error reading config file: %v", err)
 		return
 	}
 
-	log.Println("Attempting to unmarshal targets...", string(data))
+	log.Println("Attempting to unmarshal config file...", string(data))
 	var yamlConfig structs.YamlConfig
 	err = yaml.Unmarshal(data, &yamlConfig)
 	if err != nil {
-		log.Fatalln("Error unmarshalling targets file:", err)
+		log.Fatalln("Error unmarshalling config file:", err)
 		return
 	}
-	log.Println("Successfully unmarshalled targets.")
+	log.Println("Successfully unmarshalled config.")
 
 	// Start a hemoglobin instance for each target path
 	log.Println("Loaded targets:", yamlConfig.Targets)
@@ -69,6 +70,11 @@ func main() {
 	for _, target := range yamlConfig.Targets {
 		go hemoglobin.ReadLog(logChan, target)
 	}
+
+	// listen to systemd log api
+	log.Println("Loaded Systemd Services:", yamlConfig.Services)
+	log.Println("Starting to spawn systemd listener")
+	modules.ListenToSystemd(logChan, yamlConfig.Services)
 
 	// TODO: Add graceful shutdowns
 	select {}

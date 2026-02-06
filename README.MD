@@ -10,7 +10,7 @@ LogCrunch is a student project for my Honor's Undergrad thesis. Issues and PRs a
 ## Installation
 ### Server (Must be Done First)
 1. Download and extract the latest [release](https://github.com/TLop503/LogCrunch/releases) for your architecture.
-2. Generate or otehrwise configure TLS certificates. Note the path of the `key` and `crt`.
+2. Generate or otherwise configure TLS certificates. Note the path of the `key` and `crt`.
 3. Choose if you want to run the server as `root` or under a dedicated user
    1. Users will need access to read + write to `/var/log/LogCrunch/*` and `/opt/LogCrunch/`. 
 5. Start the intake server, specifying each argument. Running the intake w/o arguments will list the up-to-date required parameters. You'll need to pass in the paths to your cryptography, where to listen for logs, and where to serve the WebUI. 

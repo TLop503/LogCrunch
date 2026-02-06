@@ -16,8 +16,15 @@ type Target struct {
 	Schema   map[string]string `yaml:"schema,omitempty"`
 }
 
+type Service struct {
+	Name     string `yaml:"name"`
+	Key      string `yaml:"key"`
+	Severity string `yaml:"severity"`
+}
+
 type YamlConfig struct {
-	Targets []Target `yaml:"Targets"`
+	Targets  []Target  `yaml:"Targets"`
+	Services []Service `yaml:"Services"`
 }
 
 type ParserModule struct {

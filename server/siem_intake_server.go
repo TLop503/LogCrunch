@@ -169,7 +169,7 @@ func handleConnection(conn net.Conn, connList *structs.ConnectionList, db *sql.D
 
 		err = logdb.InsertLog(db, logStruct)
 		if err != nil {
-			log.Fatalf("Error inserting log into DB: %v", err)
+			log.Fatalf("Error inserting log into DB: %v. Log: %+v", err, logStruct)
 		}
 	}
 }

@@ -1,10 +1,7 @@
 ---
 Targets:
-  - name: Auth
-    path: /var/log/auth.log
+Services:
+  - name: JournalDemo
+    key: journal-demo
     severity: low
-    custom: false
-    module: syslog
-
-
 ...

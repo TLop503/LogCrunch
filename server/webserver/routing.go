@@ -3,6 +3,7 @@ package webserver
 import (
 	"database/sql"
 	"embed"
+	"encoding/json"
 	"html/template"
 	"io/fs"
 	"log"
@@ -43,6 +44,13 @@ func helperFuncMap() template.FuncMap {
 		"formatGoTime": func(t time.Time) string {
 			loc, _ := time.LoadLocation("Local")
 			return t.In(loc).Format("2006-01-02 15:04:05")
+		},
+		"toJSON": func(v interface{}) string {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return err.Error()
+			}
+			return string(b)
 		},
 	}
 }

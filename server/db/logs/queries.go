@@ -12,7 +12,7 @@ import (
 // MostRecent50 returns the 50 most recent log entries
 func MostRecent50_old(db *sql.DB) ([]structs.Log, error) {
 	stmt := `
-	SELECT timestamp, name, host, parsed
+	SELECT timestamp, name, host, parsed, raw
 	FROM logs
 	ORDER BY timestamp DESC
 	LIMIT 50
@@ -27,7 +27,7 @@ func MostRecent50_old(db *sql.DB) ([]structs.Log, error) {
 	var logs []structs.Log
 	for rows.Next() {
 		var log structs.Log
-		err = rows.Scan(&log.Timestamp, &log.Name, &log.Host, &log.Parsed)
+		err = rows.Scan(&log.Timestamp, &log.Name, &log.Host, &log.Parsed, &log.Raw)
 		if err != nil {
 			return nil, err
 		}
@@ -40,7 +40,7 @@ func MostRecent50_old(db *sql.DB) ([]structs.Log, error) {
 // MostRecent50 debugger
 func MostRecent50(db *sql.DB) ([]structs.Log, error) {
 	stmt := `
-	SELECT timestamp, name, host, parsed
+	SELECT timestamp, name, host, parsed, raw
 	FROM logs
 	ORDER BY timestamp DESC
 	LIMIT 50
@@ -68,6 +68,7 @@ func MostRecent50(db *sql.DB) ([]structs.Log, error) {
 			&log.Name,
 			&log.Host,
 			&parsedRaw,
+			&log.Raw,
 		); err != nil {
 			return nil, fmt.Errorf(
 				"MostRecent50: scan failed on row %d: %w",
@@ -124,7 +125,7 @@ func RunQuery(db *sql.DB, query string) ([]structs.Log, error) {
 	var logs []structs.Log
 	for rows.Next() {
 		var log structs.Log
-		err = rows.Scan(&log.Timestamp, &log.Name, &log.Host, &log.Parsed)
+		err = rows.Scan(&log.Timestamp, &log.Name, &log.Host, &log.Parsed, &log.Raw)
 		if err != nil {
 			return nil, err
 		}

@@ -18,6 +18,12 @@ type SyslogEntry struct {
 	Message   string `logfield:"message"`
 }
 
+type SyslogPrettyEntry struct {
+	Message  string `logfield:"message"`
+	Priority int    `logfield:"priority"`
+	Cmdline  string `logfield:"cmdline"`
+}
+
 type ApacheLogEntry struct {
 	Remote     string `logfield:"remote"`
 	RemoteLong string `logfield:"remote_long"`

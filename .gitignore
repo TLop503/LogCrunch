@@ -37,3 +37,9 @@ staging/*
 
 # or archives
 *.tar.gz
+
+# testing hud
+ips.test
+
+# jetbrains fluff
+.idea

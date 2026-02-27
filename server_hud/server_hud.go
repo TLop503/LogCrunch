@@ -44,12 +44,12 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(msg tea.Msg, writeWhenDone bool) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		// Handle key presses differently based on mode
 		if m.mode == normalMode {
-			return m.updateNormalMode(msg)
+			return m.updateNormalMode(msg, writeWhenDone)
 		} else {
 			return m.updateEditingMode(msg)
 		}
@@ -67,9 +67,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) updateNormalMode(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+func (m model) updateNormalMode(msg tea.KeyMsg, writeWhenDone bool) (tea.Model, tea.Cmd) {
 	switch msg.String() {
 	case "ctrl+c", "q":
+		// write aliases to file in key-value pairs
+		if writeWhenDone {
+
+		}
+
 		return m, tea.Quit
 
 	case "up", "k":
@@ -235,13 +240,24 @@ func watchFile(filePath string, updates chan<- []string) {
 	}
 }
 
+func writeAliasesToFile(aliases map[string]string) {
+
+}
+
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: server_hud <file to watch>")
+		fmt.Println("Usage: server_hud <file to watch>, <-o file to write to> optional")
 		os.Exit(1)
 	}
 
 	ipFile := os.Args[1]
+
+	writeWhenDone := false
+
+	if len(os.Args) > 2 && os.Args[3] == "-o" {
+		writeWhenDone = true
+		aliasesFile := os.Args[4]
+	}
 
 	// Read the initial file contents
 	lines, err := readFile(ipFile)
